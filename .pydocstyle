@@ -1,0 +1,9 @@
+[pydocstyle]
+# Use Google-style docstrings
+convention = google
+
+# Ignore files and directories that don't need docstrings
+ignore = .git,__pycache__,.venv,venv,build,dist,*.egg-info
+
+# Match files and directories recursively
+match = (?!test_).*\.py
