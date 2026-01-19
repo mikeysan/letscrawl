@@ -3,6 +3,7 @@ Async HTTP fetcher with security features.
 """
 
 import aiohttp
+from url_utils import is_safe_url
 from security import RobotsTxtChecker, RateLimiter
 
 
@@ -43,6 +44,10 @@ class AsyncFetcher:
         Returns:
             HTML content as string, or None if fetch fails
         """
+        # SSRF protection check
+        if not is_safe_url(url):
+            return None
+
         # Check robots.txt compliance
         if not self.robots_checker.can_fetch(self.user_agent, url):
             return None
@@ -57,5 +62,9 @@ class AsyncFetcher:
                     if response.status == 200:
                         return await response.text()
                     return None
+        except aiohttp.ClientError:
+            # Handle aiohttp-specific errors
+            return None
         except Exception:
+            # Handle any other errors
             return None
