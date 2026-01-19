@@ -3,3 +3,6 @@ __pycache__
 *.pyc
 *.pyo
 .gitnot
+.claude
+.pytest_cache
+venv

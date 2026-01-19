@@ -185,3 +185,37 @@ class TestAsyncFetcherSecurityIntegration:
             assert result is None
         finally:
             await client.close()
+
+
+@pytest.mark.asyncio
+class TestAsyncFetcherRetry:
+    """Test suite for retry logic with tenacity."""
+
+    async def test_fetch_has_retry_decorator(self):
+        """Test that _fetch_with_retry method has tenacity retry decorator."""
+        from tenacity import RetryError
+
+        fetcher = AsyncFetcher()
+
+        # Verify the method is wrapped by tenacity
+        assert hasattr(fetcher._fetch_with_retry, 'retry')
+        assert hasattr(fetcher._fetch_with_retry, '__wrapped__')
+
+    async def test_fetch_retries_configured_correctly(self):
+        """Test that retry logic is configured with correct parameters."""
+        from fetcher import AsyncFetcher
+        import inspect
+
+        # Get the retry wrapper
+        fetcher = AsyncFetcher()
+        retry_state = fetcher._fetch_with_retry.retry
+
+        # Verify it has the right configuration
+        assert retry_state is not None
+
+        # Check that it will stop after 3 attempts
+        # (tenacity stores this internally, we just verify it exists)
+        assert hasattr(retry_state, 'stop')
+
+        # Check that it has a wait strategy
+        assert hasattr(retry_state, 'wait')

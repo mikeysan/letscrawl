@@ -3,6 +3,12 @@ Async HTTP fetcher with security features.
 """
 
 import aiohttp
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_fixed,
+    retry_if_exception_type,
+)
 from url_utils import is_safe_url
 from security import RobotsTxtChecker, RateLimiter
 
@@ -34,6 +40,31 @@ class AsyncFetcher:
         self.robots_checker = robots_checker if robots_checker is not None else RobotsTxtChecker()
         self.user_agent = user_agent
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(1),
+        retry=retry_if_exception_type(aiohttp.ClientError),
+        reraise=True,
+    )
+    async def _fetch_with_retry(self, url: str) -> str | None:
+        """
+        Internal method: Fetch a URL with retry logic.
+
+        Args:
+            url: The URL to fetch
+
+        Returns:
+            HTML content as string, or None if fetch fails
+
+        Raises:
+            aiohttp.ClientError: If the fetch fails after retries
+        """
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    return await response.text()
+                return None
+
     async def fetch(self, url: str) -> str | None:
         """
         Fetch a URL asynchronously with security checks.
@@ -55,15 +86,11 @@ class AsyncFetcher:
         # Rate limit the request
         await self.rate_limiter.acquire()
 
-        # Fetch the URL
+        # Fetch the URL with retry logic
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
-                    if response.status == 200:
-                        return await response.text()
-                    return None
+            return await self._fetch_with_retry(url)
         except aiohttp.ClientError:
-            # Handle aiohttp-specific errors
+            # Retries exhausted, return None
             return None
         except Exception:
             # Handle any other errors
