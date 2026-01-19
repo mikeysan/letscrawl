@@ -2,8 +2,7 @@
 Tests for URL utilities.
 """
 
-import pytest
-from url_utils import normalize_url, is_safe_url
+from url_utils import is_safe_url, normalize_url
 
 
 class TestNormalizeUrl:

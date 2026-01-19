@@ -5,12 +5,13 @@ Async HTTP fetcher with security features.
 import aiohttp
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_fixed,
-    retry_if_exception_type,
 )
+
+from security import RateLimiter, RobotsTxtChecker
 from url_utils import is_safe_url
-from security import RobotsTxtChecker, RateLimiter
 
 
 class AsyncFetcher:
@@ -36,8 +37,14 @@ class AsyncFetcher:
             delay: Delay in seconds between requests (used if rate_limiter not provided)
             user_agent: User agent string for robots.txt checks
         """
-        self.rate_limiter = rate_limiter if rate_limiter is not None else RateLimiter(delay=delay)
-        self.robots_checker = robots_checker if robots_checker is not None else RobotsTxtChecker()
+        self.rate_limiter = (
+            rate_limiter if rate_limiter is not None else RateLimiter(delay=delay)
+        )
+        self.robots_checker = (
+            robots_checker
+            if robots_checker is not None
+            else RobotsTxtChecker()
+        )
         self.user_agent = user_agent
 
     @retry(

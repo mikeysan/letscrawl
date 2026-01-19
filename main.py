@@ -1,20 +1,17 @@
-import asyncio
 import argparse
+import asyncio
 import sys
-from typing import Dict, Any
+from typing import Any, Dict
 
 from crawl4ai import AsyncWebCrawler
-from litellm import completion
 from dotenv import load_dotenv
-
-from config import DEFAULT_CONFIG
 
 # Import base configurations
 from config import CONFIGS
 
 # Import custom configurations
 try:
-    from my_configs import *
+    from my_configs import *  # noqa: F403
 except ImportError:
     print("No custom configurations found. Using default templates only.")
 
@@ -24,7 +21,6 @@ from utils.scraper_utils import (
     get_browser_config,
     get_llm_strategy,
 )
-from models.item import ScrapedItem
 
 load_dotenv()
 
@@ -65,7 +61,7 @@ def parse_args() -> str:
     )
     
     args = parser.parse_args()
-    
+
     if args.list:
         print("\nAvailable configurations:")
         print("\nDefault templates:")
@@ -77,8 +73,9 @@ def parse_args() -> str:
             for config in custom_configs:
                 print(f"  {config}: Custom configuration")
         sys.exit(0)
-    
-    return args.config
+
+    # mypy: args.config is guaranteed to be str when --list is not used
+    return str(args.config)
 
 
 def get_config(template: str) -> Dict[str, Any]:
@@ -91,10 +88,10 @@ def get_config(template: str) -> Dict[str, Any]:
     return CONFIGS[template]
 
 
-async def crawl_items(config: Dict[str, Any]):
+async def crawl_items(config: dict[str, Any]) -> None:
     """
     Main function to crawl and extract data from websites.
-    
+
     Args:
         config: Dictionary containing crawler configuration
     """
@@ -105,8 +102,8 @@ async def crawl_items(config: Dict[str, Any]):
 
     # Initialize state variables
     page_number = 1
-    all_items = []
-    seen_titles = set()
+    all_items: list[dict[str, Any]] = []
+    seen_titles: set[str] = set()
     
     required_keys = config["REQUIRED_KEYS"]
     multi_page = config["CRAWLER_CONFIG"]["MULTI_PAGE"]
@@ -149,7 +146,10 @@ async def crawl_items(config: Dict[str, Any]):
             
             # Check if we should continue to next page
             if not multi_page or page_number >= max_pages:
-                print(f"\nReached {'page limit' if multi_page else 'single page mode'}. Ending crawl.")
+                print(
+                    f"\nReached {'page limit' if multi_page else 'single page mode'}."
+                    " Ending crawl."
+                )
                 break
                 
             page_number += 1
@@ -177,12 +177,12 @@ async def crawl_items(config: Dict[str, Any]):
     llm_strategy.show_usage()
 
 
-async def main():
+async def main() -> None:
     """Entry point of the script."""
     # Get configuration template from command line
     template = parse_args()
     config = get_config(template)
-    
+
     try:
         await crawl_items(config)
     except KeyboardInterrupt:

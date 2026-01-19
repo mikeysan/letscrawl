@@ -4,7 +4,8 @@ Integration tests for the web crawler.
 
 import pytest
 from aiohttp import web
-from aiohttp.test_utils import TestServer, TestClient
+from aiohttp.test_utils import TestClient, TestServer
+
 from crawler import WebCrawler
 
 

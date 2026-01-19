@@ -5,12 +5,12 @@ Simple async web crawler with security features.
 import asyncio
 from collections import deque
 from typing import Set
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 
 from fetcher import AsyncFetcher
-from url_utils import normalize_url, is_safe_url
+from url_utils import normalize_url
 
 
 class WebCrawler:
@@ -125,7 +125,7 @@ class WebCrawler:
         return results
 
 
-async def main():
+async def main() -> None:
     """Example usage of the web crawler."""
     crawler = WebCrawler(
         start_url="https://example.com",

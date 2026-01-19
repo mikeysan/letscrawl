@@ -15,9 +15,9 @@ class RobotsTxtChecker:
     Caches robots.txt files per domain to avoid repeated fetches.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the robots.txt checker with an empty cache."""
-        self._cache = {}
+        self._cache: dict[str, urllib.robotparser.RobotFileParser] = {}
 
     def can_fetch(self, user_agent: str, url: str) -> bool:
         """
@@ -60,11 +60,11 @@ class RateLimiter:
         Args:
             delay: Minimum delay in seconds between requests (default: 1.0)
         """
-        self.delay = delay
+        self.delay: float = delay
         self._lock = asyncio.Lock()
-        self._last_fetch_time = 0
+        self._last_fetch_time: float = 0.0
 
-    async def acquire(self):
+    async def acquire(self) -> None:
         """
         Acquire permission to make a request.
 

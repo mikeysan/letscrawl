@@ -18,14 +18,14 @@ def is_duplicate_item(title: str, seen_titles: Set[str]) -> bool:
     return title in seen_titles
 
 
-def is_complete_item(data: Dict, required_keys: List[str]) -> bool:
+def is_complete_item(data: dict[str, str], required_keys: list[str]) -> bool:
     """
     Check if the extracted data has all required fields.
-    
+
     Args:
         data: Dictionary containing the extracted data
         required_keys: List of required field names
-    
+
     Returns:
         bool: True if all required fields are present and non-empty
     """
@@ -35,10 +35,10 @@ def is_complete_item(data: Dict, required_keys: List[str]) -> bool:
     )
 
 
-def save_items_to_csv(data: List[Dict], filename: str):
+def save_items_to_csv(data: list[dict[str, str]], filename: str) -> None:
     """
     Save extracted data to a CSV file.
-    
+
     Args:
         data: List of dictionaries containing the extracted data
         filename: Name of the output CSV file

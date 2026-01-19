@@ -2,10 +2,12 @@
 Tests for async fetcher.
 """
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
+
 from fetcher import AsyncFetcher
-from security import RobotsTxtChecker, RateLimiter
+from security import RateLimiter, RobotsTxtChecker
 
 
 @pytest.mark.asyncio
@@ -49,7 +51,6 @@ class TestAsyncFetcherFetch:
     async def test_fetch_returns_html_content(self):
         """Test that fetch() returns HTML content from the URL."""
         from aiohttp import web
-        from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
         # Create a simple test server
         async def handler(request):
@@ -58,7 +59,7 @@ class TestAsyncFetcherFetch:
         app = web.Application()
         app.router.add_get('/', handler)
 
-        from aiohttp.test_utils import TestServer, TestClient
+        from aiohttp.test_utils import TestClient, TestServer
 
         server = TestServer(app)
         client = TestClient(server)
@@ -123,7 +124,7 @@ class TestAsyncFetcherFetch:
         async def mock_fetch(*args, **kwargs):
             raise ValueError("Some other error")
 
-        fetcher._fetch_with_retry = mock_fetch
+        fetcher._fetch_with_retry = mock_fetch  # type: ignore[method-assign]
 
         result = await fetcher.fetch("https://example.com")
 
@@ -175,7 +176,10 @@ class TestAsyncFetcherSecurityIntegration:
             robots_checker=mock_robots_checker
         )
 
-        with patch('aiohttp.ClientSession', side_effect=aiohttp.ClientError("Connection error")):
+        with patch(
+            'aiohttp.ClientSession',
+            side_effect=aiohttp.ClientError("Connection error")
+        ):
             result = await fetcher.fetch("https://example.com")
 
             assert result is None
@@ -183,7 +187,7 @@ class TestAsyncFetcherSecurityIntegration:
     async def test_fetch_returns_none_for_non_200_status(self):
         """Test that fetch() returns None for non-200 HTTP status codes."""
         from aiohttp import web
-        from aiohttp.test_utils import TestServer, TestClient
+        from aiohttp.test_utils import TestClient, TestServer
 
         # Create test server that returns 404
         async def handler(request):
@@ -216,7 +220,6 @@ class TestAsyncFetcherRetry:
 
     async def test_fetch_has_retry_decorator(self):
         """Test that _fetch_with_retry method has tenacity retry decorator."""
-        from tenacity import RetryError
 
         fetcher = AsyncFetcher()
 
@@ -226,12 +229,12 @@ class TestAsyncFetcherRetry:
 
     async def test_fetch_retries_configured_correctly(self):
         """Test that retry logic is configured with correct parameters."""
+
         from fetcher import AsyncFetcher
-        import inspect
 
         # Get the retry wrapper
         fetcher = AsyncFetcher()
-        retry_state = fetcher._fetch_with_retry.retry
+        retry_state = fetcher._fetch_with_retry.retry  # type: ignore[attr-defined]
 
         # Verify it has the right configuration
         assert retry_state is not None

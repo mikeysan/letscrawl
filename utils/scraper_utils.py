@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, List, Set, Tuple, Any
+from typing import Any, Dict, List, Set, Tuple
 
 from crawl4ai import (
     AsyncWebCrawler,
@@ -117,9 +117,9 @@ async def fetch_and_process_page(
     css_selector: str,
     llm_strategy: LLMExtractionStrategy,
     session_id: str,
-    required_keys: List[str],
-    seen_titles: Set[str],
-) -> Tuple[List[dict], bool]:
+    required_keys: list[str],
+    seen_titles: set[str],
+) -> tuple[list[dict[str, str]], bool]:
     """
     Fetches and processes a single page of items.
 
@@ -205,7 +205,9 @@ async def fetch_and_process_page(
 
         # Validate item data
         if not is_complete_item(item, required_keys):
-            missing_keys = [key for key in required_keys if key not in item or not item[key]]
+            missing_keys = [
+                key for key in required_keys if key not in item or not item[key]
+            ]
             print(f"Incomplete data for '{title}'")
             print(f"Missing required fields: {', '.join(missing_keys)}")
             continue

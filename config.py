@@ -1,9 +1,12 @@
 # config.py
 
+import os
+
 # Default configuration for dental clinics example
 DEFAULT_CONFIG = {
     "BASE_URL": "https://www.opencare.com/dentists/new-york-ny/",
-    "CSS_SELECTOR": "div[data-test='search-result-card']",  # Updated selector for OpenCare dental listings
+    # Updated selector for OpenCare dental listings
+    "CSS_SELECTOR": "div[data-test='search-result-card']",
     "REQUIRED_KEYS": [
         "name",
         "location",
@@ -22,8 +25,10 @@ DEFAULT_CONFIG = {
     # Crawler settings
     "CRAWLER_CONFIG": {
         "MULTI_PAGE": True,  # Set to False for single page scraping
-        "MAX_PAGES": 5,  # Maximum number of pages to scrape (ignored if MULTI_PAGE is False)
-        "DELAY_BETWEEN_PAGES": 2,  # Delay in seconds between page requests
+        # Maximum number of pages to scrape (ignored if MULTI_PAGE is False)
+        "MAX_PAGES": 5,
+        # Delay in seconds between page requests
+        "DELAY_BETWEEN_PAGES": 2,
         "HEADLESS": False,  # Run browser in visible mode for debugging
         "CACHE_ENABLED": False,  # Enable/disable caching
         "VERBOSE_LOGGING": True,  # Enable detailed logging
@@ -34,12 +39,14 @@ DEFAULT_CONFIG = {
         "EXTRACTION_TYPE": "schema",
         "INPUT_FORMAT": "markdown",
         "INSTRUCTION": """
-        Extract dental clinic information from the content. For each clinic, find:
+        Extract dental clinic information from the content. For each
+        clinic, find:
 
         Required information:
         - Name: The full name of the dental clinic or dentist's practice
         - Location: The complete address of the clinic
-        - Description: A brief description of the clinic, their services, or the dentist's expertise
+        - Description: A brief description of the clinic, their services,
+          or the dentist's expertise
         - Rating: The numerical rating (out of 5 stars) if available
 
         Additional information if present:
@@ -50,12 +57,11 @@ DEFAULT_CONFIG = {
         - Number of reviews
         - Price range or insurance information
 
-        Extract this information for each dental clinic card or listing found in the content.
+        Extract this information for each dental clinic card or listing
+        found in the content.
         """,
     }
 }
-
-import os
 
 # Example configurations for different use cases
 CONFIGS = {
@@ -63,7 +69,7 @@ CONFIGS = {
     "minimal": {
         **DEFAULT_CONFIG,
         "CRAWLER_CONFIG": {
-            **DEFAULT_CONFIG["CRAWLER_CONFIG"],
+            **DEFAULT_CONFIG["CRAWLER_CONFIG"],  # type: ignore[dict-item]
             "MULTI_PAGE": False,
             "VERBOSE_LOGGING": False,
             "HEADLESS": True,
@@ -73,11 +79,11 @@ CONFIGS = {
     "detailed": {
         **DEFAULT_CONFIG,
         "CRAWLER_CONFIG": {
-            **DEFAULT_CONFIG["CRAWLER_CONFIG"],
+            **DEFAULT_CONFIG["CRAWLER_CONFIG"],  # type: ignore[dict-item]
             "MAX_PAGES": 10,
             "DELAY_BETWEEN_PAGES": 3,
         },
-        "REQUIRED_KEYS": DEFAULT_CONFIG["REQUIRED_KEYS"] + ["phone", "website"],
+        "REQUIRED_KEYS": list(DEFAULT_CONFIG["REQUIRED_KEYS"]) + ["phone", "website"],
     },
     "test": {
         **DEFAULT_CONFIG,
@@ -94,13 +100,13 @@ CONFIGS = {
             "website"
         ],
         "CRAWLER_CONFIG": {
-            **DEFAULT_CONFIG["CRAWLER_CONFIG"],
+            **DEFAULT_CONFIG["CRAWLER_CONFIG"],  # type: ignore[dict-item]
             "MULTI_PAGE": False,
             "HEADLESS": False,
             "VERBOSE_LOGGING": True
         },
         "LLM_CONFIG": {
-            **DEFAULT_CONFIG["LLM_CONFIG"],
+            **DEFAULT_CONFIG["LLM_CONFIG"],  # type: ignore[dict-item]
             "INSTRUCTION": """
             Extract information from each item card. For each item, find:
 

@@ -1,5 +1,6 @@
-from config import CONFIGS
 import os
+
+from config import CONFIGS
 
 # Get the current directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -8,7 +9,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Configuration for local test products
 test_config = {
-    "BASE_URL": f"https://www.etsy.com/uk/",
+    "BASE_URL": "https://www.etsy.com/uk/",
     "CSS_SELECTOR": ".product-card",  # Product card container
     "REQUIRED_KEYS": [
         "title",      # Product name
@@ -54,7 +55,9 @@ CONFIGS['test'] = test_config
 
 # Show helpful message when this file is run directly
 if __name__ == "__main__":
-    print("Loaded custom configurations:", [k for k in CONFIGS.keys() if k not in ["products", "articles", "businesses", "minimal"]])
+    excluded = ["products", "articles", "businesses", "minimal"]
+    custom_configs = [k for k in CONFIGS.keys() if k not in excluded]
+    print("Loaded custom configurations:", custom_configs)
     print("\nTo use these configurations, run:")
     print("python main.py --config CONFIG_NAME")
     print("\nAvailable custom configurations:")

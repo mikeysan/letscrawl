@@ -1,6 +1,6 @@
-import os
 import json
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 
 def get_input(prompt: str, default: str = "") -> str:
     """Get user input with an optional default value."""
@@ -9,11 +9,11 @@ def get_input(prompt: str, default: str = "") -> str:
         return result if result else default
     return input(f"{prompt}: ").strip()
 
-def get_list_input(prompt: str) -> List[str]:
+def get_list_input(prompt: str) -> list[str]:
     """Get a list of items from user input."""
     print(f"\n{prompt}")
     print("Enter one item per line. Press Enter twice when done.")
-    items = []
+    items: list[str] = []
     while True:
         item = input().strip()
         if not item:
@@ -67,7 +67,9 @@ def create_config() -> Dict[str, Any]:
     print("\n🔑 Data Fields")
     print("-" * 50)
     print("Define the fields to extract from each item:")
-    required_keys = get_list_input("Enter required fields (e.g., title, price, description):")
+    required_keys = get_list_input(
+        "Enter required fields (e.g., title, price, description):"
+    )
     has_optional = get_bool_input("\nDo you want to add optional fields?")
     optional_keys = []
     if has_optional:
@@ -95,7 +97,7 @@ def create_config() -> Dict[str, Any]:
     
     if custom_instructions:
         print("\nEnter your custom instructions. Press Enter twice when done:")
-        instructions = []
+        instructions: list[str] = []
         while True:
             line = input()
             if not line and instructions:
@@ -173,10 +175,16 @@ def create_config() -> Dict[str, Any]:
                 f.write(new_content)
             
             print("\n✅ Configuration added to config.py successfully!")
-            print(f"\nYou can now run your crawler with:\npython main.py --config {config_name}")
+            print(
+                "\nYou can now run your crawler with:\n"
+                f"python main.py --config {config_name}"
+            )
         except Exception as e:
             print(f"\n❌ Error saving to config.py: {str(e)}")
-            print("Please manually add the configuration shown above to your config.py file.")
+            print(
+                "Please manually add the configuration shown above to your"
+                " config.py file."
+            )
     
     return config
 

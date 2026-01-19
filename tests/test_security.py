@@ -2,11 +2,13 @@
 Tests for security utilities.
 """
 
-import pytest
 import asyncio
 import time
 from unittest.mock import Mock, patch
-from security import RobotsTxtChecker, RateLimiter
+
+import pytest
+
+from security import RateLimiter, RobotsTxtChecker
 
 
 class TestRobotsTxtChecker:
@@ -17,33 +19,40 @@ class TestRobotsTxtChecker:
         mock_robot_parser = Mock()
         mock_robot_parser.can_fetch.return_value = True
 
-        with patch('security.urllib.robotparser.RobotFileParser', return_value=mock_robot_parser):
+        patch_target = 'security.urllib.robotparser.RobotFileParser'
+        with patch(patch_target, return_value=mock_robot_parser):
             checker = RobotsTxtChecker()
             result = checker.can_fetch('MyBot', 'https://example.com/page')
 
             assert result is True
             mock_robot_parser.set_url.assert_called_once()
             mock_robot_parser.read.assert_called_once()
-            mock_robot_parser.can_fetch.assert_called_once_with('MyBot', 'https://example.com/page')
+            mock_robot_parser.can_fetch.assert_called_once_with(
+                'MyBot', 'https://example.com/page'
+            )
 
     def test_can_fetch_blocks_disallowed_path(self):
         """Test that can_fetch returns False when robots.txt disallows access."""
         mock_robot_parser = Mock()
         mock_robot_parser.can_fetch.return_value = False
 
-        with patch('security.urllib.robotparser.RobotFileParser', return_value=mock_robot_parser):
+        patch_target = 'security.urllib.robotparser.RobotFileParser'
+        with patch(patch_target, return_value=mock_robot_parser):
             checker = RobotsTxtChecker()
             result = checker.can_fetch('MyBot', 'https://example.com/admin')
 
             assert result is False
-            mock_robot_parser.can_fetch.assert_called_once_with('MyBot', 'https://example.com/admin')
+            mock_robot_parser.can_fetch.assert_called_once_with(
+                'MyBot', 'https://example.com/admin'
+            )
 
     def test_can_fetch_caches_robots_txt_per_domain(self):
         """Test that robots.txt is cached per domain."""
         mock_robot_parser = Mock()
         mock_robot_parser.can_fetch.return_value = True
 
-        with patch('security.urllib.robotparser.RobotFileParser', return_value=mock_robot_parser):
+        patch_target = 'security.urllib.robotparser.RobotFileParser'
+        with patch(patch_target, return_value=mock_robot_parser):
             checker = RobotsTxtChecker()
 
             # Fetch from same domain twice
@@ -59,7 +68,8 @@ class TestRobotsTxtChecker:
         mock_robot_parser = Mock()
         mock_robot_parser.can_fetch.return_value = True
 
-        with patch('security.urllib.robotparser.RobotFileParser', return_value=mock_robot_parser):
+        patch_target = 'security.urllib.robotparser.RobotFileParser'
+        with patch(patch_target, return_value=mock_robot_parser):
             checker = RobotsTxtChecker()
 
             # Fetch from different domains
