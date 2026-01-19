@@ -106,6 +106,29 @@ class TestAsyncFetcherFetch:
 
             assert result is None
 
+    async def test_fetch_returns_none_on_general_exception(self):
+        """Test that fetch() returns None on non-aiohttp exceptions."""
+        mock_rate_limiter = Mock(spec=RateLimiter)
+        mock_rate_limiter.acquire = AsyncMock()
+
+        mock_robots_checker = Mock(spec=RobotsTxtChecker)
+        mock_robots_checker.can_fetch.return_value = True
+
+        fetcher = AsyncFetcher(
+            rate_limiter=mock_rate_limiter,
+            robots_checker=mock_robots_checker
+        )
+
+        # Mock to raise a non-ClientError exception
+        async def mock_fetch(*args, **kwargs):
+            raise ValueError("Some other error")
+
+        fetcher._fetch_with_retry = mock_fetch
+
+        result = await fetcher.fetch("https://example.com")
+
+        assert result is None
+
 
 @pytest.mark.asyncio
 class TestAsyncFetcherSecurityIntegration:
