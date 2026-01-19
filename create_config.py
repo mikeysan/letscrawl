@@ -1,5 +1,7 @@
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict
+
+from utils.logger import logger
 
 
 def get_input(prompt: str, default: str = "") -> str:
@@ -11,15 +13,15 @@ def get_input(prompt: str, default: str = "") -> str:
 
 def get_list_input(prompt: str) -> list[str]:
     """Get a list of items from user input."""
-    print(f"\n{prompt}")
-    print("Enter one item per line. Press Enter twice when done.")
+    logger.info(f"\n{prompt}")
+    logger.info("Enter one item per line. Press Enter twice when done.")
     items: list[str] = []
     while True:
         item = input().strip()
         if not item:
             if items:
                 break
-            print("Please enter at least one item.")
+            logger.info("Please enter at least one item.")
             continue
         items.append(item)
     return items
@@ -35,7 +37,7 @@ def get_bool_input(prompt: str, default: bool = True) -> bool:
             return True
         if response in ["n", "no"]:
             return False
-        print("Please enter 'y' or 'n'")
+        logger.info("Please enter 'y' or 'n'")
 
 def get_int_input(prompt: str, default: int, min_val: int = 1) -> int:
     """Get an integer value from user input."""
@@ -46,27 +48,27 @@ def get_int_input(prompt: str, default: int, min_val: int = 1) -> int:
                 return default
             value = int(response)
             if value < min_val:
-                print(f"Please enter a number >= {min_val}")
+                logger.info(f"Please enter a number >= {min_val}")
                 continue
             return value
         except ValueError:
-            print("Please enter a valid number")
+            logger.info("Please enter a valid number")
 
 def create_config() -> Dict[str, Any]:
     """Create a new crawler configuration interactively."""
-    print("\n🤖 DeepSeek Web Crawler Configuration Generator\n")
+    logger.info("\n🤖 DeepSeek Web Crawler Configuration Generator\n")
     
     # Basic Information
-    print("📝 Basic Information")
+    logger.info("📝 Basic Information")
     print("-" * 50)
     config_name = get_input("Configuration name (e.g., amazon_products)")
     base_url = get_input("Target website URL")
     css_selector = get_input("CSS selector for items (e.g., div.product-card)")
 
     # Required and Optional Fields
-    print("\n🔑 Data Fields")
+    logger.info("\n🔑 Data Fields")
     print("-" * 50)
-    print("Define the fields to extract from each item:")
+    logger.info("Define the fields to extract from each item:")
     required_keys = get_list_input(
         "Enter required fields (e.g., title, price, description):"
     )
@@ -76,7 +78,7 @@ def create_config() -> Dict[str, Any]:
         optional_keys = get_list_input("Enter optional fields:")
 
     # Crawler Settings
-    print("\n⚙️ Crawler Settings")
+    logger.info("\n⚙️ Crawler Settings")
     print("-" * 50)
     multi_page = get_bool_input("Enable multi-page crawling?")
     max_pages = 1
@@ -89,14 +91,14 @@ def create_config() -> Dict[str, Any]:
     verbose = get_bool_input("Enable verbose logging?")
 
     # LLM Instructions
-    print("\n🧠 LLM Configuration")
+    logger.info("\n🧠 LLM Configuration")
     print("-" * 50)
-    print("Define extraction instructions for the LLM.")
-    print("Default instructions will be generated based on your fields.")
+    logger.info("Define extraction instructions for the LLM.")
+    logger.info("Default instructions will be generated based on your fields.")
     custom_instructions = get_bool_input("Do you want to provide custom instructions?")
     
     if custom_instructions:
-        print("\nEnter your custom instructions. Press Enter twice when done:")
+        logger.info("\nEnter your custom instructions. Press Enter twice when done:")
         instructions: list[str] = []
         while True:
             line = input()
@@ -138,7 +140,7 @@ def create_config() -> Dict[str, Any]:
     }
 
     # Save the configuration
-    print("\n💾 Saving Configuration")
+    logger.info("\n💾 Saving Configuration")
     print("-" * 50)
     
     # Format the configuration as Python code
@@ -151,7 +153,7 @@ def create_config() -> Dict[str, Any]:
             config_str += f'    "{key}": {json.dumps(value, indent=8)[1:-1]},\n'
     config_str += "}"
 
-    print("\nAdd this to your config.py file in the CONFIGS dictionary:\n")
+    logger.info("\nAdd this to your config.py file in the CONFIGS dictionary:\n")
     print(config_str)
 
     save = get_bool_input("\nWould you like to automatically add this to config.py?")
@@ -174,13 +176,13 @@ def create_config() -> Dict[str, Any]:
             with open("config.py", "w") as f:
                 f.write(new_content)
             
-            print("\n✅ Configuration added to config.py successfully!")
+            logger.info("\n✅ Configuration added to config.py successfully!")
             print(
                 "\nYou can now run your crawler with:\n"
                 f"python main.py --config {config_name}"
             )
         except Exception as e:
-            print(f"\n❌ Error saving to config.py: {str(e)}")
+            logger.info(f"\n❌ Error saving to config.py: {str(e)}")
             print(
                 "Please manually add the configuration shown above to your"
                 " config.py file."
@@ -192,4 +194,4 @@ if __name__ == "__main__":
     try:
         create_config()
     except KeyboardInterrupt:
-        print("\n\n❌ Configuration creation cancelled.")
+        logger.info("\n\n❌ Configuration creation cancelled.")

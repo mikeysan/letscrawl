@@ -1,7 +1,8 @@
 import csv
-from typing import Dict, List, Set
+from typing import Set
 
 from models.item import ScrapedItem
+from utils.logger import logger
 
 
 def is_duplicate_item(title: str, seen_titles: Set[str]) -> bool:
@@ -44,7 +45,7 @@ def save_items_to_csv(data: list[dict[str, str]], filename: str) -> None:
         filename: Name of the output CSV file
     """
     if not data:
-        print("No data to save.")
+        logger.info("No data to save.")
         return
 
     # Get all possible field names from the data and model
@@ -61,4 +62,4 @@ def save_items_to_csv(data: list[dict[str, str]], filename: str) -> None:
             row = {field: item.get(field, "") for field in fieldnames}
             writer.writerow(row)
             
-    print(f"Saved {len(data)} records to '{filename}'.")
+    logger.info(f"Saved {len(data)} records to '{filename}'.")

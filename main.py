@@ -13,9 +13,11 @@ from config import CONFIGS
 try:
     from my_configs import *  # noqa: F403
 except ImportError:
-    print("No custom configurations found. Using default templates only.")
+    from utils.logger import logger
+    logger.info("No custom configurations found. Using default templates only.")
 
 from utils.data_utils import save_items_to_csv
+from utils.logger import logger
 from utils.scraper_utils import (
     fetch_and_process_page,
     get_browser_config,
@@ -63,15 +65,15 @@ def parse_args() -> str:
     args = parser.parse_args()
 
     if args.list:
-        print("\nAvailable configurations:")
-        print("\nDefault templates:")
+        logger.info("\nAvailable configurations:")
+        logger.info("\nDefault templates:")
         for config in default_configs:
             if config in CONFIGS:
-                print(f"  {config}: For {config} scraping")
+                logger.info(f"  {config}: For {config} scraping")
         if custom_configs:
-            print("\nCustom configurations:")
+            logger.info("\nCustom configurations:")
             for config in custom_configs:
-                print(f"  {config}: Custom configuration")
+                logger.info(f"  {config}: Custom configuration")
         sys.exit(0)
 
     # mypy: args.config is guaranteed to be str when --list is not used
@@ -81,9 +83,9 @@ def parse_args() -> str:
 def get_config(template: str) -> Dict[str, Any]:
     """Get configuration based on template name."""
     if template not in CONFIGS:
-        print(f"Error: Unknown configuration '{template}'")
-        print("\nTo see available configurations, run:")
-        print("python main.py --list")
+        logger.error(f"Error: Unknown configuration '{template}'")
+        logger.info("\nTo see available configurations, run:")
+        logger.info("python main.py --list")
         sys.exit(1)
     return CONFIGS[template]
 
@@ -110,13 +112,13 @@ async def crawl_items(config: dict[str, Any]) -> None:
     max_pages = config["CRAWLER_CONFIG"].get("MAX_PAGES", 1)
     delay = config["CRAWLER_CONFIG"].get("DELAY_BETWEEN_PAGES", 2)
 
-    print(f"\nStarting crawler with {config['BASE_URL']}")
-    print(f"Mode: {'Multi-page' if multi_page else 'Single-page'}")
+    logger.info(f"\nStarting crawler with {config['BASE_URL']}")
+    logger.info(f"Mode: {'Multi-page' if multi_page else 'Single-page'}")
     if multi_page:
-        print(f"Max pages: {max_pages}")
-    print("Required fields:", ", ".join(required_keys))
-    print("Optional fields:", ", ".join(config.get("OPTIONAL_KEYS", [])))
-    print("\nInitializing crawler...\n")
+        logger.info(f"Max pages: {max_pages}")
+    logger.info("Required fields: %s", ", ".join(required_keys))
+    logger.info("Optional fields: %s", ", ".join(config.get("OPTIONAL_KEYS", [])))
+    logger.info("\nInitializing crawler...\n")
 
     # Start the web crawler context
     async with AsyncWebCrawler(config=browser_config) as crawler:
@@ -134,46 +136,49 @@ async def crawl_items(config: dict[str, Any]) -> None:
             )
 
             if no_results_found:
-                print("\nNo more items found. Ending crawl.")
+                logger.info("\nNo more items found. Ending crawl.")
                 break
 
             if not items:
-                print(f"\nNo items extracted from page {page_number}.")
+                logger.warning(f"\nNo items extracted from page {page_number}.")
                 break
 
             # Add the items from this page to the total list
             all_items.extend(items)
-            
+
             # Check if we should continue to next page
             if not multi_page or page_number >= max_pages:
-                print(
+                logger.info(
                     f"\nReached {'page limit' if multi_page else 'single page mode'}."
                     " Ending crawl."
                 )
                 break
-                
+
             page_number += 1
-            print(f"\nMoving to page {page_number}...")
+            logger.info(f"\nMoving to page {page_number}...")
             await asyncio.sleep(delay)
 
     # Save the collected items to CSV files
     if all_items:
         # Save all items
         save_items_to_csv(all_items, "items.csv")
-        print(f"\nSaved {len(all_items)} items to 'items.csv'")
-        
+        logger.info(f"\nSaved {len(all_items)} items to 'items.csv'")
+
         # Save complete items (those with all required fields)
         complete_items = [
-            item for item in all_items 
+            item for item in all_items
             if all(key in item and item[key] for key in required_keys)
         ]
         save_items_to_csv(complete_items, "complete_items.csv")
-        print(f"Saved {len(complete_items)} complete items to 'complete_items.csv'")
+        logger.info(
+            "Saved %d complete items to 'complete_items.csv'",
+            len(complete_items)
+        )
     else:
-        print("\nNo items were found during the crawl.")
+        logger.warning("\nNo items were found during the crawl.")
 
     # Display usage statistics for the LLM strategy
-    print("\nLLM Usage Statistics:")
+    logger.info("\nLLM Usage Statistics:")
     llm_strategy.show_usage()
 
 
@@ -186,11 +191,11 @@ async def main() -> None:
     try:
         await crawl_items(config)
     except KeyboardInterrupt:
-        print("\nCrawling interrupted by user.")
+        logger.warning("\nCrawling interrupted by user.")
     except Exception as e:
-        print(f"\nAn error occurred: {str(e)}")
+        logger.error(f"\nAn error occurred: {str(e)}")
     finally:
-        print("\nCrawling completed.")
+        logger.info("\nCrawling completed.")
 
 
 if __name__ == "__main__":

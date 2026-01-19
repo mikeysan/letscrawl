@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict
 
 from crawl4ai import (
     AsyncWebCrawler,
@@ -12,6 +12,7 @@ from crawl4ai import (
 
 from models.item import ScrapedItem
 from utils.data_utils import is_complete_item, is_duplicate_item
+from utils.logger import logger
 
 
 def get_browser_config(config: Dict[str, Any]) -> BrowserConfig:
@@ -105,7 +106,7 @@ async def check_no_results(
         return any(phrase.lower() in result.cleaned_html.lower() 
                   for phrase in no_results_phrases)
     else:
-        print(f"Error checking for no results: {result.error_message}")
+        logger.info(f"Error checking for no results: {result.error_message}")
 
     return False
 
@@ -147,12 +148,12 @@ async def fetch_and_process_page(
         else:
             url = f"{base_url}?page={page_number}"
     
-    print(f"\nProcessing page {page_number}: {url}")
+    logger.info(f"\nProcessing page {page_number}: {url}")
 
     # Check for no results
     no_results = await check_no_results(crawler, url, session_id)
     if no_results:
-        print("No results found on this page.")
+        logger.info("No results found on this page.")
         return [], True
 
     # Fetch page content with additional wait time
@@ -168,26 +169,26 @@ async def fetch_and_process_page(
     )
 
     if not result.success:
-        print(f"Error fetching page {page_number}: {result.error_message}")
+        logger.info(f"Error fetching page {page_number}: {result.error_message}")
         return [], False
 
     if not result.extracted_content:
-        print(f"No content extracted from page {page_number}.")
+        logger.info(f"No content extracted from page {page_number}.")
         return [], False
 
     # Parse extracted content
     try:
         extracted_data = json.loads(result.extracted_content)
         if not extracted_data:
-            print(f"No data found on page {page_number}.")
+            logger.info(f"No data found on page {page_number}.")
             return [], False
             
         if True:  # Always show extracted data for debugging
-            print(f"Raw extracted data from page {page_number}:")
+            logger.info(f"Raw extracted data from page {page_number}:")
             print(json.dumps(extracted_data, indent=2))
         
     except json.JSONDecodeError as e:
-        print(f"Error parsing JSON from page {page_number}: {str(e)}")
+        logger.info(f"Error parsing JSON from page {page_number}: {str(e)}")
         return [], False
 
     # Process items
@@ -200,7 +201,7 @@ async def fetch_and_process_page(
         # Get the title (main identifier) of the item
         title = item.get("title")
         if not title:
-            print("Item found without a title, skipping...")
+            logger.info("Item found without a title, skipping...")
             continue
 
         # Validate item data
@@ -208,17 +209,17 @@ async def fetch_and_process_page(
             missing_keys = [
                 key for key in required_keys if key not in item or not item[key]
             ]
-            print(f"Incomplete data for '{title}'")
-            print(f"Missing required fields: {', '.join(missing_keys)}")
+            logger.info(f"Incomplete data for '{title}'")
+            logger.info(f"Missing required fields: {', '.join(missing_keys)}")
             continue
 
         if is_duplicate_item(title, seen_titles):
-            print(f"Duplicate found: {title}")
+            logger.info(f"Duplicate found: {title}")
             continue
 
         # Add item to results
         seen_titles.add(title)
         complete_items.append(item)
 
-    print(f"\nFound {len(complete_items)} valid items on page {page_number}.")
+    logger.info(f"\nFound {len(complete_items)} valid items on page {page_number}.")
     return complete_items, False

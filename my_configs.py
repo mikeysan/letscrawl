@@ -1,6 +1,7 @@
 import os
 
 from config import CONFIGS
+from utils.logger import logger
 
 # Get the current directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -58,9 +59,9 @@ if __name__ == "__main__":
     excluded = ["products", "articles", "businesses", "minimal"]
     custom_configs = [k for k in CONFIGS.keys() if k not in excluded]
     print("Loaded custom configurations:", custom_configs)
-    print("\nTo use these configurations, run:")
-    print("python main.py --config CONFIG_NAME")
-    print("\nAvailable custom configurations:")
+    logger.info("\nTo use these configurations, run:")
+    logger.info("python main.py --config CONFIG_NAME")
+    logger.info("\nAvailable custom configurations:")
     for config in CONFIGS.keys():
         if config not in ["products", "articles", "businesses", "minimal"]:
-            print(f"- {config}")
+            logger.info(f"- {config}")

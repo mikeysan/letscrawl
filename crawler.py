@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 
 from fetcher import AsyncFetcher
 from url_utils import normalize_url
+from utils.logger import logger
 
 
 class WebCrawler:
@@ -104,11 +105,11 @@ class WebCrawler:
                 continue
 
             # Fetch the page
-            print(f"Crawling: {url}")
+            logger.info(f"Crawling: {url}")
             html = await self.fetcher.fetch(url)
 
             if html is None:
-                print(f"Failed to fetch: {url}")
+                logger.warning(f"Failed to fetch: {url}")
                 continue
 
             # Mark as visited
@@ -121,7 +122,7 @@ class WebCrawler:
                 if self._should_crawl(link):
                     self.frontier.append(link)
 
-        print(f"\nCrawling complete. Visited {len(self.visited)} pages.")
+        logger.info(f"\nCrawling complete. Visited {len(self.visited)} pages.")
         return results
 
 
@@ -135,9 +136,9 @@ async def main() -> None:
 
     results = await crawler.crawl()
 
-    print(f"\nCrawled {len(results)} pages:")
+    logger.info(f"\nCrawled {len(results)} pages:")
     for url in results.keys():
-        print(f"  - {url}")
+        logger.info("  - %s", url)
 
 
 if __name__ == "__main__":
