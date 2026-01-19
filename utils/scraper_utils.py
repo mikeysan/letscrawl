@@ -7,6 +7,7 @@ from crawl4ai import (
     BrowserConfig,
     CacheMode,
     CrawlerRunConfig,
+    LLMConfig,
     LLMExtractionStrategy,
 )
 
@@ -43,8 +44,10 @@ def get_llm_strategy(config: Dict[str, Any]) -> LLMExtractionStrategy:
         LLMExtractionStrategy: The settings for how to extract data using LLM.
     """
     return LLMExtractionStrategy(
-        provider=config.get("PROVIDER", "groq/deepseek-r1-distill-llama-70b"),
-        api_token=os.getenv("GROQ_API_KEY"),
+        llm_config=LLMConfig(
+            provider=config.get("PROVIDER", "groq/deepseek-r1-distill-llama-70b"),
+            api_token=os.getenv("GROQ_API_KEY"),
+        ),
         schema=ScrapedItem.model_json_schema(),
         extraction_type=config.get("EXTRACTION_TYPE", "schema"),
         instruction=config.get("INSTRUCTION", (
