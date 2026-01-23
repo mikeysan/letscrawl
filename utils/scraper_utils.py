@@ -116,7 +116,7 @@ async def check_no_results(
         config=CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
             session_id=session_id,
-            wait_until="networkidle",  # Wait for network to be idle
+            wait_until="domcontentloaded",  # Wait for DOM content to load (faster, more reliable)
         ),
     )
 
@@ -193,7 +193,7 @@ async def fetch_and_process_page(
             extraction_strategy=llm_strategy,
             css_selector=css_selector,
             session_id=session_id,
-            wait_until="networkidle"  # Wait for network to be idle
+            wait_until="domcontentloaded"  # Wait for DOM content to load (faster, more reliable)
         ),
     )
     logger.debug(f"LLM extraction completed for page {page_number}")
