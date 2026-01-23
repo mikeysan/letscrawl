@@ -35,7 +35,7 @@ DEFAULT_CONFIG = {
     },
     # LLM Configuration
     "LLM_CONFIG": {
-        "PROVIDER": "groq/deepseek-r1-distill-llama-70b",
+        "PROVIDER": "groq/llama-3.3-70b-versatile",
         "EXTRACTION_TYPE": "schema",
         "INPUT_FORMAT": "markdown",
         "INSTRUCTION": """
@@ -108,7 +108,7 @@ CONFIGS = {
             Extract information from each item card. For each item, find:
 
             Required information:
-            - Name: The title of the item (h2 text)
+            - Title: The title of the item (h2 text)
             - Description: The description text
             - Location: The location text
             - Rating: The numerical rating
@@ -148,7 +148,7 @@ CONFIGS = {
             "VERBOSE_LOGGING": True
         },
         "LLM_CONFIG": {
-            "PROVIDER": "groq/deepseek-r1-distill-llama-70b",
+            "PROVIDER": "groq/llama-3.3-70b-versatile",
             "EXTRACTION_TYPE": "schema",
             "INPUT_FORMAT": "markdown",
             "INSTRUCTION": "Locate and download book cover images"

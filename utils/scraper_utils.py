@@ -51,7 +51,7 @@ def validate_llm_config(config: Dict[str, Any]) -> None:
             "Example: export GROQ_API_KEY='your-api-key-here'"
         )
 
-    provider = config.get("PROVIDER", "groq/deepseek-r1-distill-llama-70b")
+    provider = config.get("PROVIDER", "groq/llama-3.3-70b-versatile")
     logger.info(f"LLM provider: {provider}")
     logger.info(f"API key prefix: {api_key[:8]}...")
 

@@ -1,0 +1,4 @@
+additional_info,author,category,contact,date_posted,description,image_url,location,price,rating,reviews_count,tags,title,url
+,,,555-0001,,This is a description of test item 1,,"123 Test Street, Test City",,4.5,,,Test Item 1,http://test1.com
+,,,555-0002,,This is a description of test item 2,,"456 Test Avenue, Test City",,4.8,,,Test Item 2,http://test2.com
+,,,555-0003,,This is a description of test item 3,,"789 Test Boulevard, Test City",,4.2,,,Test Item 3,http://test3.com

@@ -27,7 +27,7 @@ test_config = {
         "DELAY_BETWEEN_PAGES": 1
     },
     "LLM_CONFIG": {
-        "PROVIDER": "groq/deepseek-r1-distill-llama-70b",
+        "PROVIDER": "groq/llama-3.3-70b-versatile",
         "EXTRACTION_TYPE": "schema",
         "INPUT_FORMAT": "markdown",
         "INSTRUCTION": """
