@@ -164,7 +164,7 @@ CONFIGS = {
             {
                 "name": "Seneweb (Senegal)",
                 "BASE_URL": "https://www.seneweb.com",
-                "CSS_SELECTOR": "article, .news-item, .post"
+                "CSS_SELECTOR": "div.post-sidebar-big"
             },
             {
                 "name": "The Namibian (Namibia)",

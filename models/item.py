@@ -11,6 +11,7 @@ class ScrapedItem(BaseModel):
     """
     title: Optional[str] = None
     description: Optional[str] = None
+    content: Optional[str] = None  # Main article text
     url: Optional[str] = None
     price: Optional[str] = None
     image_url: Optional[str] = None
@@ -20,6 +21,7 @@ class ScrapedItem(BaseModel):
     location: Optional[str] = None
     contact: Optional[str] = None
     date_posted: Optional[str] = None
+    date_published: Optional[str] = None  # Publication date for news
     author: Optional[str] = None
     tags: Optional[str] = None
     additional_info: Optional[str] = None
