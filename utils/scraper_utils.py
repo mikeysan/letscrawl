@@ -185,6 +185,7 @@ async def fetch_and_process_page(
         return [], True
 
     # Fetch page content with additional wait time
+    logger.debug(f"Starting LLM extraction for page {page_number}...")
     result = await crawler.arun(
         url=url,
         config=CrawlerRunConfig(
@@ -195,13 +196,17 @@ async def fetch_and_process_page(
             wait_until="networkidle"  # Wait for network to be idle
         ),
     )
+    logger.debug(f"LLM extraction completed for page {page_number}")
 
     if not result.success:
         logger.info(f"Error fetching page {page_number}: {result.error_message}")
         return [], False
 
     if not result.extracted_content:
-        logger.info(f"No content extracted from page {page_number}.")
+        logger.warning(
+            f"No content extracted from page {page_number}. "
+            f"CSS selector '{css_selector}' may have found 0 elements."
+        )
         return [], False
 
     # Parse extracted content
@@ -221,6 +226,10 @@ async def fetch_and_process_page(
 
     # Process items
     complete_items = []
+    skipped_no_title = 0
+    skipped_incomplete = 0
+    skipped_duplicate = 0
+
     for item in extracted_data:
         # Remove error key if it's False
         if item.get("error") is False:
@@ -229,11 +238,13 @@ async def fetch_and_process_page(
         # Get the title (main identifier) of the item
         title = item.get("title")
         if not title:
+            skipped_no_title += 1
             logger.info("Item found without a title, skipping...")
             continue
 
         # Validate item data
         if not is_complete_item(item, required_keys):
+            skipped_incomplete += 1
             missing_keys = [
                 key for key in required_keys if key not in item or not item[key]
             ]
@@ -242,6 +253,7 @@ async def fetch_and_process_page(
             continue
 
         if is_duplicate_item(title, seen_titles):
+            skipped_duplicate += 1
             logger.info(f"Duplicate found: {title}")
             continue
 
@@ -249,5 +261,13 @@ async def fetch_and_process_page(
         seen_titles.add(title)
         complete_items.append(item)
 
-    logger.info(f"\nFound {len(complete_items)} valid items on page {page_number}.")
+    # Log summary statistics
+    total_items = len(extracted_data)
+    logger.info(
+        f"\nExtracted {total_items} items: "
+        f"{len(complete_items)} valid, "
+        f"{skipped_no_title} no title, "
+        f"{skipped_incomplete} incomplete, "
+        f"{skipped_duplicate} duplicates"
+    )
     return complete_items, False
