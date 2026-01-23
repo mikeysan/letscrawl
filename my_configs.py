@@ -52,7 +52,7 @@ test_config = {
 }
 
 # Add to CONFIGS dictionary
-CONFIGS['test'] = test_config
+CONFIGS['etsy'] = test_config
 
 # Show helpful message when this file is run directly
 if __name__ == "__main__":

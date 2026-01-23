@@ -90,15 +90,12 @@ CONFIGS = {
         "BASE_URL": "file:///" + os.path.abspath("test.html").replace("\\", "/"),
         "CSS_SELECTOR": "div.item-card",
         "REQUIRED_KEYS": [
-            "name",
+            "title",
             "description",
             "location",
             "rating"
         ],
-        "OPTIONAL_KEYS": [
-            "phone",
-            "website"
-        ],
+        "OPTIONAL_KEYS": [],
         "CRAWLER_CONFIG": {
             **DEFAULT_CONFIG["CRAWLER_CONFIG"],  # type: ignore[dict-item]
             "MULTI_PAGE": False,
