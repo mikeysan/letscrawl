@@ -134,11 +134,11 @@ CONFIGS = {
             "cover",
             "description"
         ],
-        
+
         "OPTIONAL_KEYS": [
             "url"
         ],
-        
+
         "CRAWLER_CONFIG": {
             "MULTI_PAGE": True,
             "MAX_PAGES": 3,
@@ -152,7 +152,57 @@ CONFIGS = {
             "EXTRACTION_TYPE": "schema",
             "INPUT_FORMAT": "markdown",
             "INSTRUCTION": "Locate and download book cover images"
-        
+
+        }
+    },
+
+    # News crawler for multiple African news sites
+    "news": {
+        **DEFAULT_CONFIG,
+        # Use SITES list for multiple websites with different selectors
+        "SITES": [
+            {
+                "name": "Seneweb (Senegal)",
+                "BASE_URL": "https://www.seneweb.com",
+                "CSS_SELECTOR": "article, .news-item, .post"
+            },
+            {
+                "name": "The Namibian (Namibia)",
+                "BASE_URL": "https://www.namibian.com.na",
+                "CSS_SELECTOR": "article, .news-article, .post-item"
+            },
+            {
+                "name": "New Times (Rwanda)",
+                "BASE_URL": "https://www.newtimes.co.rw",
+                "CSS_SELECTOR": "article, .article-card, .news-story"
+            }
+        ],
+        # Minimal fields for news articles
+        "REQUIRED_KEYS": [
+            "title",
+            "date_published"
+        ],
+        "OPTIONAL_KEYS": ["content"],
+        # Crawler settings
+        "CRAWLER_CONFIG": {
+            **DEFAULT_CONFIG["CRAWLER_CONFIG"],  # type: ignore[dict-item]
+            "MULTI_PAGE": True,
+            "MAX_PAGES": 3,
+            "DELAY_BETWEEN_PAGES": 5,
+            "HEADLESS": True,
+            "CACHE_ENABLED": False,
+            "VERBOSE_LOGGING": True
+        },
+        "LLM_CONFIG": {
+            **DEFAULT_CONFIG["LLM_CONFIG"],  # type: ignore[dict-item]
+            "INSTRUCTION": """
+            Extract news article information from each article element:
+            - Title: The headline/title of the news article
+            - Content: The main article text or summary description
+            - Date Published: The publication date (in any recognizable format)
+
+            Focus on extracting clean, readable text content for each field.
+            """
         }
     }
 }
