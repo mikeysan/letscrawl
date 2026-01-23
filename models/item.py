@@ -25,3 +25,4 @@ class ScrapedItem(BaseModel):
     author: Optional[str] = None
     tags: Optional[str] = None
     additional_info: Optional[str] = None
+    feed_valid: Optional[bool] = None  # True if RSS feed URL is valid

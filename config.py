@@ -204,5 +204,53 @@ CONFIGS = {
             Focus on extracting clean, readable text content for each field.
             """
         }
+    },
+
+    # RSS Feed URL Finder - finds all RSS feed URLs on websites
+    "rss": {
+        **DEFAULT_CONFIG,
+        # Sites to scan for RSS feeds
+        "SITES": [
+            {
+                "name": "CNN",
+                "BASE_URL": "https://cnn.com",
+                "CSS_SELECTOR": "link[type='application/rss+xml'], link[type='application/atom+xml'], a[href*='/rss'], a[href*='/feed'], a[href*='.rss'], a[href*='.xml']"
+            },
+            {
+                "name": "BBC",
+                "BASE_URL": "https://bbc.com",
+                "CSS_SELECTOR": "link[type='application/rss+xml'], link[type='application/atom+xml'], a[href*='/rss'], a[href*='/feed'], a[href*='.rss'], a[href*='.xml']"
+            },
+            {
+                "name": "NYTimes",
+                "BASE_URL": "https://nytimes.com",
+                "CSS_SELECTOR": "link[type='application/rss+xml'], link[type='application/atom+xml'], a[href*='/rss'], a[href*='/feed'], a[href*='.rss'], a[href*='.xml']"
+            }
+        ],
+        # Only need URL field for RSS feeds
+        "REQUIRED_KEYS": ["url"],
+        "OPTIONAL_KEYS": [],
+        # Crawler settings
+        "CRAWLER_CONFIG": {
+            **DEFAULT_CONFIG["CRAWLER_CONFIG"],  # type: ignore[dict-item]
+            "MULTI_PAGE": False,  # Single page scanning
+            "HEADLESS": True,
+            "CACHE_ENABLED": False,
+            "VERBOSE_LOGGING": True
+        },
+        "LLM_CONFIG": {
+            **DEFAULT_CONFIG["LLM_CONFIG"],  # type: ignore[dict-item]
+            "INSTRUCTION": """
+            Find all RSS feed URLs on this page.
+
+            Extract the full URL for each RSS feed found. Look for:
+            1. <link> tags with type="application/rss+xml" or type="application/atom+xml"
+            2. Anchor tags (<a>) linking to /rss, /feed, .rss, or .xml files
+            3. Common RSS indicators in link text ("RSS", "Subscribe", "Feed")
+            4. Both absolute and relative URLs (include relative URLs as-is)
+
+            Extract ALL RSS feed URLs found on the page. Return only the URLs.
+            """
+        }
     }
 }

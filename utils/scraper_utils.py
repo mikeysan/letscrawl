@@ -1,7 +1,9 @@
 import json
 import os
+import xml.etree.ElementTree as ET
 from typing import Any, Dict
 
+import requests
 from crawl4ai import (
     AsyncWebCrawler,
     BrowserConfig,
@@ -14,6 +16,34 @@ from crawl4ai import (
 from models.item import ScrapedItem
 from utils.data_utils import is_complete_item, is_duplicate_item
 from utils.logger import logger
+
+
+def validate_rss_feed(url: str) -> bool:
+    """
+    Validate an RSS feed URL by fetching and parsing it.
+
+    Args:
+        url: The RSS feed URL to validate.
+
+    Returns:
+        bool: True if the RSS feed is valid, False otherwise.
+    """
+    try:
+        response = requests.get(url, timeout=10, headers={'User-Agent': 'Mozilla/5.0'})
+        if response.status_code != 200:
+            logger.info(f"RSS feed returned status {response.status_code}: {url}")
+            return False
+
+        # Try to parse as XML
+        ET.fromstring(response.content)
+        logger.info(f"RSS feed validated successfully: {url}")
+        return True
+    except ET.ParseError as e:
+        logger.info(f"RSS feed XML parsing failed: {url} - {e}")
+        return False
+    except Exception as e:
+        logger.info(f"RSS feed validation failed: {url} - {e}")
+        return False
 
 
 def get_browser_config(config: Dict[str, Any]) -> BrowserConfig:
@@ -148,6 +178,7 @@ async def fetch_and_process_page(
     session_id: str,
     required_keys: list[str],
     seen_titles: set[str],
+    rss_validation: bool = False,
 ) -> tuple[list[dict[str, str]], bool]:
     """
     Fetches and processes a single page of items.
@@ -161,6 +192,7 @@ async def fetch_and_process_page(
         session_id (str): The session identifier.
         required_keys (List[str]): List of required keys in the item data.
         seen_titles (Set[str]): Set of item titles that have already been seen.
+        rss_validation (bool): Whether to validate RSS feed URLs. Default False.
 
     Returns:
         Tuple[List[dict], bool]:
@@ -229,18 +261,40 @@ async def fetch_and_process_page(
     skipped_no_title = 0
     skipped_incomplete = 0
     skipped_duplicate = 0
+    skipped_invalid_rss = 0
 
     for item in extracted_data:
         # Remove error key if it's False
         if item.get("error") is False:
             item.pop("error", None)
 
-        # Get the title (main identifier) of the item
-        title = item.get("title")
-        if not title:
-            skipped_no_title += 1
-            logger.info("Item found without a title, skipping...")
-            continue
+        # For RSS validation mode, use URL as identifier; otherwise use title
+        if rss_validation:
+            url = item.get("url")
+            if not url:
+                skipped_no_title += 1
+                logger.info("RSS feed found without URL, skipping...")
+                continue
+
+            # Validate RSS feed URL
+            if not validate_rss_feed(url):
+                skipped_invalid_rss += 1
+                item["feed_valid"] = False
+                logger.info(f"Invalid RSS feed: {url}")
+                # Optionally still include invalid feeds with feed_valid=False
+                # For now, skip them
+                continue
+
+            item["feed_valid"] = True
+            # Use URL as identifier for RSS feeds
+            identifier = url
+        else:
+            # Get the title (main identifier) of the item
+            identifier = item.get("title")
+            if not identifier:
+                skipped_no_title += 1
+                logger.info("Item found without a title, skipping...")
+                continue
 
         # Validate item data
         if not is_complete_item(item, required_keys):
@@ -248,26 +302,35 @@ async def fetch_and_process_page(
             missing_keys = [
                 key for key in required_keys if key not in item or not item[key]
             ]
-            logger.info(f"Incomplete data for '{title}'")
+            logger.info(f"Incomplete data for '{identifier}'")
             logger.info(f"Missing required fields: {', '.join(missing_keys)}")
             continue
 
-        if is_duplicate_item(title, seen_titles):
+        if is_duplicate_item(identifier, seen_titles):
             skipped_duplicate += 1
-            logger.info(f"Duplicate found: {title}")
+            logger.info(f"Duplicate found: {identifier}")
             continue
 
         # Add item to results
-        seen_titles.add(title)
+        seen_titles.add(identifier)
         complete_items.append(item)
 
     # Log summary statistics
     total_items = len(extracted_data)
-    logger.info(
-        f"\nExtracted {total_items} items: "
-        f"{len(complete_items)} valid, "
-        f"{skipped_no_title} no title, "
-        f"{skipped_incomplete} incomplete, "
-        f"{skipped_duplicate} duplicates"
-    )
+    if rss_validation:
+        logger.info(
+            f"\nExtracted {total_items} RSS feed URLs: "
+            f"{len(complete_items)} valid, "
+            f"{skipped_no_title} no URL, "
+            f"{skipped_invalid_rss} invalid RSS feeds, "
+            f"{skipped_duplicate} duplicates"
+        )
+    else:
+        logger.info(
+            f"\nExtracted {total_items} items: "
+            f"{len(complete_items)} valid, "
+            f"{skipped_no_title} no title, "
+            f"{skipped_incomplete} incomplete, "
+            f"{skipped_duplicate} duplicates"
+        )
     return complete_items, False

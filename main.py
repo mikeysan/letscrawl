@@ -90,12 +90,13 @@ def get_config(template: str) -> Dict[str, Any]:
     return CONFIGS[template]
 
 
-async def crawl_items(config: dict[str, Any]) -> None:
+async def crawl_items(config: dict[str, Any], rss_mode: bool = False) -> None:
     """
     Main function to crawl and extract data from websites.
 
     Args:
         config: Dictionary containing crawler configuration
+        rss_mode: Whether to enable RSS feed validation mode
     """
     # Initialize configurations
     browser_config = get_browser_config(config["CRAWLER_CONFIG"])
@@ -103,60 +104,132 @@ async def crawl_items(config: dict[str, Any]) -> None:
     session_id = "crawl_session"
 
     # Initialize state variables
-    page_number = 1
     all_items: list[dict[str, Any]] = []
     seen_titles: set[str] = set()
-    
+
     required_keys = config["REQUIRED_KEYS"]
     multi_page = config["CRAWLER_CONFIG"]["MULTI_PAGE"]
     max_pages = config["CRAWLER_CONFIG"].get("MAX_PAGES", 1)
     delay = config["CRAWLER_CONFIG"].get("DELAY_BETWEEN_PAGES", 2)
 
-    logger.info(f"\nStarting crawler with {config['BASE_URL']}")
-    logger.info(f"Mode: {'Multi-page' if multi_page else 'Single-page'}")
-    if multi_page:
-        logger.info(f"Max pages: {max_pages}")
-    logger.info("Required fields: %s", ", ".join(required_keys))
-    logger.info("Optional fields: %s", ", ".join(config.get("OPTIONAL_KEYS", [])))
-    logger.info("\nInitializing crawler...\n")
+    # Check if config uses SITES list (multi-site crawling) or single BASE_URL
+    if "SITES" in config:
+        sites = config["SITES"]
+        logger.info(f"\nStarting multi-site crawler with {len(sites)} sites")
+        logger.info("Required fields: %s", ", ".join(required_keys))
+        logger.info("Optional fields: %s", ", ".join(config.get("OPTIONAL_KEYS", [])))
+        logger.info("\nInitializing crawler...\n")
 
-    # Start the web crawler context
-    async with AsyncWebCrawler(config=browser_config) as crawler:
-        while True:
-            # Fetch and process data from the current page
-            items, no_results_found = await fetch_and_process_page(
-                crawler,
-                page_number,
-                config["BASE_URL"],
-                config["CSS_SELECTOR"],
-                llm_strategy,
-                session_id,
-                required_keys,
-                seen_titles,
-            )
+        async with AsyncWebCrawler(config=browser_config) as crawler:
+            for site in sites:
+                site_name = site.get("name", "Unknown site")
+                base_url = site["BASE_URL"]
+                css_selector = site["CSS_SELECTOR"]
 
-            if no_results_found:
-                logger.info("\nNo more items found. Ending crawl.")
-                break
+                logger.info(f"\n{'='*60}")
+                logger.info(f"Crawling: {site_name}")
+                logger.info(f"URL: {base_url}")
+                logger.info(f"Mode: {'Multi-page' if multi_page else 'Single-page'}")
+                if multi_page:
+                    logger.info(f"Max pages: {max_pages}")
+                logger.info(f"{'='*60}\n")
 
-            if not items:
-                logger.warning(f"\nNo items extracted from page {page_number}.")
-                break
+                page_number = 1
+                while True:
+                    # Fetch and process data from the current page
+                    items, no_results_found = await fetch_and_process_page(
+                        crawler,
+                        page_number,
+                        base_url,
+                        css_selector,
+                        llm_strategy,
+                        session_id,
+                        required_keys,
+                        seen_titles,
+                        rss_validation=rss_mode,
+                    )
 
-            # Add the items from this page to the total list
-            all_items.extend(items)
+                    if no_results_found:
+                        logger.info("\nNo more items found. Ending crawl for this site.")
+                        break
 
-            # Check if we should continue to next page
-            if not multi_page or page_number >= max_pages:
-                logger.info(
-                    f"\nReached {'page limit' if multi_page else 'single page mode'}."
-                    " Ending crawl."
+                    if not items:
+                        logger.warning(f"\nNo items extracted from page {page_number}.")
+                        break
+
+                    # Add site source to each item
+                    for item in items:
+                        item["source_site"] = site_name
+
+                    # Add the items from this page to the total list
+                    all_items.extend(items)
+
+                    # Check if we should continue to next page
+                    if not multi_page or page_number >= max_pages:
+                        logger.info(
+                            f"\nReached {'page limit' if multi_page else 'single page mode'}."
+                            " Ending crawl for this site."
+                        )
+                        break
+
+                    page_number += 1
+                    logger.info(f"\nMoving to page {page_number}...")
+                    await asyncio.sleep(delay)
+
+                logger.info(f"\nCompleted crawling {site_name}. Total items so far: {len(all_items)}")
+                await asyncio.sleep(delay)  # Delay between sites
+    else:
+        # Single site crawling (original behavior)
+        page_number = 1
+        base_url = config["BASE_URL"]
+        css_selector = config["CSS_SELECTOR"]
+
+        logger.info(f"\nStarting crawler with {base_url}")
+        logger.info(f"Mode: {'Multi-page' if multi_page else 'Single-page'}")
+        if multi_page:
+            logger.info(f"Max pages: {max_pages}")
+        logger.info("Required fields: %s", ", ".join(required_keys))
+        logger.info("Optional fields: %s", ", ".join(config.get("OPTIONAL_KEYS", [])))
+        logger.info("\nInitializing crawler...\n")
+
+        # Start the web crawler context
+        async with AsyncWebCrawler(config=browser_config) as crawler:
+            while True:
+                # Fetch and process data from the current page
+                items, no_results_found = await fetch_and_process_page(
+                    crawler,
+                    page_number,
+                    base_url,
+                    css_selector,
+                    llm_strategy,
+                    session_id,
+                    required_keys,
+                    seen_titles,
+                    rss_validation=rss_mode,
                 )
-                break
 
-            page_number += 1
-            logger.info(f"\nMoving to page {page_number}...")
-            await asyncio.sleep(delay)
+                if no_results_found:
+                    logger.info("\nNo more items found. Ending crawl.")
+                    break
+
+                if not items:
+                    logger.warning(f"\nNo items extracted from page {page_number}.")
+                    break
+
+                # Add the items from this page to the total list
+                all_items.extend(items)
+
+                # Check if we should continue to next page
+                if not multi_page or page_number >= max_pages:
+                    logger.info(
+                        f"\nReached {'page limit' if multi_page else 'single page mode'}."
+                        " Ending crawl."
+                    )
+                    break
+
+                page_number += 1
+                logger.info(f"\nMoving to page {page_number}...")
+                await asyncio.sleep(delay)
 
     # Save the collected items to CSV files
     if all_items:
@@ -188,6 +261,9 @@ async def main() -> None:
     template = parse_args()
     config = get_config(template)
 
+    # Detect if we're in RSS mode
+    rss_mode = template == "rss" or config.get("REQUIRED_KEYS") == ["url"]
+
     # Validate LLM configuration before starting crawl
     try:
         from utils.scraper_utils import validate_llm_config
@@ -197,7 +273,7 @@ async def main() -> None:
         sys.exit(1)
 
     try:
-        await crawl_items(config)
+        await crawl_items(config, rss_mode=rss_mode)
     except KeyboardInterrupt:
         logger.warning("\nCrawling interrupted by user.")
     except Exception as e:
