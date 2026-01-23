@@ -33,6 +33,29 @@ def get_browser_config(config: Dict[str, Any]) -> BrowserConfig:
     )
 
 
+def validate_llm_config(config: Dict[str, Any]) -> None:
+    """
+    Validate that LLM configuration is complete and API key is set.
+
+    Args:
+        config: Dictionary containing LLM configuration settings
+
+    Raises:
+        ValueError: If GROQ_API_KEY environment variable is not set
+    """
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError(
+            "GROQ_API_KEY environment variable is not set. "
+            "Please set it in your .env file or export it before running.\n"
+            "Example: export GROQ_API_KEY='your-api-key-here'"
+        )
+
+    provider = config.get("PROVIDER", "groq/deepseek-r1-distill-llama-70b")
+    logger.info(f"LLM provider: {provider}")
+    logger.info(f"API key prefix: {api_key[:8]}...")
+
+
 def get_llm_strategy(config: Dict[str, Any]) -> LLMExtractionStrategy:
     """
     Returns the configuration for the language model extraction strategy.
@@ -43,6 +66,8 @@ def get_llm_strategy(config: Dict[str, Any]) -> LLMExtractionStrategy:
     Returns:
         LLMExtractionStrategy: The settings for how to extract data using LLM.
     """
+    validate_llm_config(config)
+
     return LLMExtractionStrategy(
         llm_config=LLMConfig(
             provider=config.get("PROVIDER", "groq/deepseek-r1-distill-llama-70b"),

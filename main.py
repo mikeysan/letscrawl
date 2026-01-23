@@ -188,6 +188,14 @@ async def main() -> None:
     template = parse_args()
     config = get_config(template)
 
+    # Validate LLM configuration before starting crawl
+    try:
+        from utils.scraper_utils import validate_llm_config
+        validate_llm_config(config["LLM_CONFIG"])
+    except ValueError as e:
+        logger.error(f"Configuration error: {e}")
+        sys.exit(1)
+
     try:
         await crawl_items(config)
     except KeyboardInterrupt:
