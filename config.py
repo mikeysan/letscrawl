@@ -174,7 +174,7 @@ CONFIGS = {
             {
                 "name": "New Times (Rwanda)",
                 "BASE_URL": "https://www.newtimes.co.rw",
-                "CSS_SELECTOR": "article, .article-card, .news-story"
+                "CSS_SELECTOR": ".article"
             }
         ],
         # Minimal fields for news articles
