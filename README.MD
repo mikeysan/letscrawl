@@ -1,4 +1,4 @@
-# ORIGINAL README DeepSeek Web Crawler 🤖
+# LetsCrawl - Intelligent Web Crawler 🤖
 
 A powerful and flexible web crawler that uses Groq's LLM API to intelligently extract structured data from any website. Perfect for data scientists, researchers, and developers who need to gather and analyze web data.
 
@@ -12,8 +12,15 @@ A powerful and flexible web crawler that uses Groq's LLM API to intelligently ex
 🎯 **Flexible Targeting**
 - CSS selector-based element targeting
 - Multi-page crawling support
+- Multi-site crawling with different selectors
 - Configurable delay between requests
 - Cache support for faster development
+
+🌍 **Translation Support**
+- Optional translation of extracted content during extraction
+- Single-pass: extract + translate together in one API call
+- Support for multiple target languages
+- Preserves non-translatable fields (URLs, dates, ratings)
 
 🛠️ **Easy Configuration**
 - Ready-to-use templates for common use cases
@@ -29,36 +36,13 @@ A powerful and flexible web crawler that uses Groq's LLM API to intelligently ex
 
 🔒 **Safe & Respectful**
 - Configurable delays between requests
-- User-agent customization
-- Proxy support
 - Cache mechanism to reduce server load
-
-## Creating Your Own Crawler
-
-To create a new crawler configuration:
-
-1. Use the generator script:
-   ```bash
-   python create_config.py
-   ```
-   This will guide you through creating a new configuration by asking:
-   - Target website URL
-   - CSS selector for items
-   - Required fields
-   - Optional fields
-   - Crawler settings (pages, delay, etc.)
-   - LLM instructions
-
-2. Or manually create one:
-   - Copy a template from below
-   - Add it to config.py
-   - Customize the settings
 
 ## Getting Started
 
 ### 1. Environment Setup
 
-1. First, install the required dependencies:
+1. Install the required dependencies:
    ```bash
    pip install -r requirements.txt
    ```
@@ -69,229 +53,140 @@ To create a new crawler configuration:
    ```
    Get your API key from [Groq Console](https://console.groq.com)
 
-### 2. Understanding the Project Structure
+### 2. Available Configuration Templates 🔧
 
-- `config.py`: Contains crawler configurations for different use cases
-  - Defines what data to extract and how to extract it
-  - Includes settings for browser behavior and LLM configuration
-  - You can modify existing configs or add new ones here
-
-- `main.py`: The entry point of the crawler
-  - Handles command-line arguments
-  - Manages the crawling process
-  - Saves results to CSV files
-
-### 3. Available Configuration Templates 🔧
-
-First, try the test configuration to verify your setup:
-
-🧪 `test`: Local testing configuration
-- Uses a local test.html file
-- Good for testing the crawler without making web requests
-- Helps understand how the extraction works
-- Recommended before trying web scraping
-```python
-python main.py --config test
+List all available configurations:
+```bash
+python main.py --list
 ```
 
-Then use these templates for your scraping needs:
+Built-in configurations:
 
-Here are templates you can use for different scraping scenarios:
+- **`dental`**: Dental clinic listings (default template)
+- **`minimal`**: Single-page scraping with minimal output
+- **`detailed`**: Extended multi-page crawling with more fields
+- **`news`**: Multi-site news article scraping (Seneweb, The Namibian, New Times)
+- **`rss`**: RSS feed URL finder for websites
 
-1. 🛍️ E-commerce Product Scraping:
-```python
-"ecommerce": {
-    **DEFAULT_CONFIG,
-    "BASE_URL": "https://example-store.com/products",
-    "CSS_SELECTOR": "div.product-card",
-    "REQUIRED_KEYS": [
-        "name",
-        "price",
-        "description"
-    ],
-    "OPTIONAL_KEYS": [
-        "sku",
-        "category",
-        "stock_status",
-        "rating",
-        "reviews_count",
-        "image_url"
-    ],
-    "LLM_CONFIG": {
-        **DEFAULT_CONFIG["LLM_CONFIG"],
-        "INSTRUCTION": """
-        Extract product information from each product card:
-        - Name: Product title
-        - Price: Current price (remove currency symbol)
-        - Description: Product description
-        - SKU: Product identifier
-        - Category: Product category
-        - Stock Status: In stock/Out of stock
-        - Rating: Numerical rating
-        - Reviews Count: Number of reviews
-        - Image URL: Product image URL
-        """
-    }
-}
+### 3. Running the Crawler
+
+Basic usage:
+```bash
+# List available configurations
+python main.py --list
+
+# Run with a specific configuration
+python main.py --config news
+python main.py --config dental
+python main.py --config rss
 ```
 
-2. 📰 News Article Scraping:
-```python
-"news": {
-    **DEFAULT_CONFIG,
-    "BASE_URL": "https://example-news.com",
-    "CSS_SELECTOR": "article.news-item",
-    "REQUIRED_KEYS": [
-        "title",
-        "content",
-        "date_published"
-    ],
-    "OPTIONAL_KEYS": [
-        "author",
-        "category",
-        "tags",
-        "image_url",
-        "comments_count"
-    ],
-    "CRAWLER_CONFIG": {
-        **DEFAULT_CONFIG["CRAWLER_CONFIG"],
-        "MULTI_PAGE": True,
-        "MAX_PAGES": 3,
-        "DELAY_BETWEEN_PAGES": 5
-    }
-}
+#### Translation Feature
+
+Translate extracted content to English (default):
+```bash
+python main.py --config news --translate
 ```
 
-3. 🏢 Job Listing Scraping:
-```python
-"jobs": {
-    **DEFAULT_CONFIG,
-    "BASE_URL": "https://example-jobs.com/listings",
-    "CSS_SELECTOR": "div.job-posting",
-    "REQUIRED_KEYS": [
-        "title",
-        "company",
-        "location",
-        "description"
-    ],
-    "OPTIONAL_KEYS": [
-        "salary",
-        "job_type",
-        "experience_level",
-        "posted_date",
-        "benefits",
-        "skills_required"
-    ],
-    "CRAWLER_CONFIG": {
-        **DEFAULT_CONFIG["CRAWLER_CONFIG"],
-        "MULTI_PAGE": True,
-        "MAX_PAGES": 10
-    }
-}
+Translate to a specific language:
+```bash
+# Translate to French
+python main.py --config news --translate --target-language fr
+
+# Translate to Spanish
+python main.py --config news --translate --target-language es
+
+# Supported languages: en, fr, es, de, it, pt, ar, zh, ja
 ```
 
-4. 🏠 Real Estate Listing Scraping:
-```python
-"real_estate": {
-    **DEFAULT_CONFIG,
-    "BASE_URL": "https://example-realty.com/listings",
-    "CSS_SELECTOR": "div.property-listing",
-    "REQUIRED_KEYS": [
-        "address",
-        "price",
-        "bedrooms",
-        "bathrooms",
-        "square_feet"
-    ],
-    "OPTIONAL_KEYS": [
-        "property_type",
-        "year_built",
-        "lot_size",
-        "amenities",
-        "agent_info",
-        "images",
-        "description"
-    ],
-    "LLM_CONFIG": {
-        **DEFAULT_CONFIG["LLM_CONFIG"],
-        "INSTRUCTION": """
-        Extract property information from each listing:
-        - Address: Full property address
-        - Price: Listing price (numbers only)
-        - Bedrooms: Number of bedrooms
-        - Bathrooms: Number of bathrooms
-        - Square Feet: Property size
-        - Property Type: House/Condo/etc.
-        - Year Built: Construction year
-        - Lot Size: Land area
-        - Amenities: List of features
-        - Agent Info: Contact information
-        - Images: Property image URLs
-        - Description: Property description
-        """
-    }
-}
+#### Custom URLs (RSS Config)
+
+Override default sites with custom URLs:
+```bash
+python main.py --config rss --urls https://cnn.com https://bbc.com
+python main.py --config news --urls https://www.seneweb.com
 ```
 
-### 4. Running the Crawler
-
-1. List available configurations:
-   ```bash
-   python main.py --list
-   ```
-
-2. Run with your configuration:
-   ```bash
-   python main.py --config test          # Start with test configuration
-   python main.py --config ecommerce     # Run e-commerce scraping
-   python main.py --config news          # Run news article scraping
-   python main.py --config jobs          # Run job listing scraping
-   python main.py --config real_estate   # Run real estate scraping
-   ```
-
-   Note: Make sure to add the configuration to config.py first using the templates above.
-
-### 5. Output
+### 4. Output
 
 The crawler generates two CSV files:
 - `items.csv`: Contains all scraped items
 - `complete_items.csv`: Contains only items with all required fields
 
-### 6. Creating Custom Configurations
+### 5. Creating Custom Configurations
 
-To create a new configuration:
+To create a new configuration, open `config.py` and add to the `CONFIGS` dictionary:
 
-1. Open `config.py`
-2. Add your configuration to the `CONFIGS` dictionary
-3. Define:
-   - BASE_URL: The starting URL to crawl
-   - CSS_SELECTOR: How to identify items on the page
-   - REQUIRED_KEYS: Fields that must be present
-   - OPTIONAL_KEYS: Additional fields to extract if available
-   - CRAWLER_CONFIG: Browser and pagination settings
-   - LLM_CONFIG: Instructions for the LLM
-
-Example:
 ```python
 "my_config": {
     **DEFAULT_CONFIG,  # Inherit from default
     "BASE_URL": "https://example.com",
     "CSS_SELECTOR": "div.item",
     "REQUIRED_KEYS": ["name", "price"],
+    "OPTIONAL_KEYS": ["description", "rating"],
     "CRAWLER_CONFIG": {
         **DEFAULT_CONFIG["CRAWLER_CONFIG"],
-        "MULTI_PAGE": False
+        "MULTI_PAGE": False,
+        "MAX_PAGES": 5,
+        "DELAY_BETWEEN_PAGES": 2,
+    },
+    "LLM_CONFIG": {
+        **DEFAULT_CONFIG["LLM_CONFIG"],
+        "INSTRUCTION": """
+        Extract product information from each item:
+        - Name: Product title
+        - Price: Current price
+        - Description: Product description
+        - Rating: Numerical rating if available
+        """
     }
 }
 ```
 
-### 7. Troubleshooting
+Or create a separate `my_configs.py` file:
+```python
+from config import DEFAULT_CONFIG, CONFIGS
+
+CONFIGS["my_custom_config"] = {
+    **DEFAULT_CONFIG,
+    "BASE_URL": "https://example.com",
+    # ... rest of configuration
+}
+```
+
+#### Configuration Options
+
+- **`BASE_URL`**: Starting URL for crawling
+- **`CSS_SELECTOR`**: CSS selector to identify items on the page
+- **`REQUIRED_KEYS`**: Fields that must be present (filtering)
+- **`OPTIONAL_KEYS`**: Additional fields to extract if available
+- **`SITES`**: For multi-site crawling, list of sites with different selectors
+- **`CRAWLER_CONFIG`**: Browser and pagination settings
+  - `MULTI_PAGE`: Enable multi-page crawling
+  - `MAX_PAGES`: Maximum number of pages to crawl
+  - `DELAY_BETWEEN_PAGES`: Delay in seconds between requests
+  - `HEADLESS`: Run browser in headless mode
+  - `CACHE_ENABLED`: Enable caching for faster development
+  - `VERBOSE_LOGGING`: Enable detailed logging
+- **`LLM_CONFIG`**: LLM extraction settings
+  - `PROVIDER`: LLM provider (default: groq/llama-3.3-70b-versatile)
+  - `EXTRACTION_TYPE`: Type of extraction (schema)
+  - `INPUT_FORMAT`: Input format (markdown)
+  - `INSTRUCTION`: Custom extraction instructions
+- **`TRANSLATION_CONFIG`**: Translation settings
+  - `ENABLED`: Enable translation by default for this config
+  - `TARGET_LANGUAGE`: Default target language code
+  - `TEXT_FIELDS`: List of fields to translate
+
+### 6. Troubleshooting
 
 If you encounter issues:
-1. Check your GROQ_API_KEY in .env
-2. Ensure all dependencies are installed
-3. Try the test configuration first to verify basic functionality
-4. Check the terminal output for detailed error messages
+1. Check your `GROQ_API_KEY` in .env file
+2. Ensure all dependencies are installed: `pip install -r requirements.txt`
+3. Check that CSS selectors match the target website structure
+4. Use browser DevTools to inspect the page and find correct selectors
+5. Try with `HEADLESS: False` in crawler config to see the browser
+6. Check terminal output for detailed error messages
 
 ## License
 
