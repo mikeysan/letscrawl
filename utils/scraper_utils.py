@@ -86,17 +86,54 @@ def validate_llm_config(config: Dict[str, Any]) -> None:
     logger.info(f"API key prefix: {api_key[:8]}...")
 
 
-def get_llm_strategy(config: Dict[str, Any]) -> LLMExtractionStrategy:
+def get_llm_strategy(
+    config: Dict[str, Any],
+    translate: bool = False,
+    target_language: str = "en"
+) -> LLMExtractionStrategy:
     """
     Returns the configuration for the language model extraction strategy.
 
     Args:
         config: Dictionary containing LLM configuration settings
+        translate: Whether to enable translation (default: False)
+        target_language: Target language code for translation (default: "en")
 
     Returns:
         LLMExtractionStrategy: The settings for how to extract data using LLM.
     """
     validate_llm_config(config)
+
+    base_instruction = config.get("INSTRUCTION", (
+        "Extract information from the content with these details:\n"
+        "- Title/name of the item\n"
+        "- Description or main content\n"
+        "- Any URLs present\n"
+        "- Dates if available\n"
+        "- Categories or types\n"
+        "- Tags or labels\n"
+        "- Ratings if present\n"
+        "- Price information\n"
+        "- Location/address if applicable\n"
+        "- Contact information\n"
+        "- Any other relevant metadata\n"
+        "\nFormat the output as structured data following the schema."
+    ))
+
+    # Apply translation if enabled
+    if translate:
+        from config import get_translation_instruction
+        translation_config = config.get("TRANSLATION_CONFIG", {})
+        text_fields = translation_config.get("TEXT_FIELDS", ["title", "description", "content"])
+
+        final_instruction = get_translation_instruction(
+            base_instruction,
+            target_language,
+            text_fields
+        )
+        logger.info(f"Translation enabled: {text_fields} → {target_language}")
+    else:
+        final_instruction = base_instruction
 
     return LLMExtractionStrategy(
         llm_config=LLMConfig(
@@ -105,21 +142,7 @@ def get_llm_strategy(config: Dict[str, Any]) -> LLMExtractionStrategy:
         ),
         schema=ScrapedItem.model_json_schema(),
         extraction_type=config.get("EXTRACTION_TYPE", "schema"),
-        instruction=config.get("INSTRUCTION", (
-            "Extract information from the content with these details:\n"
-            "- Title/name of the item\n"
-            "- Description or main content\n"
-            "- Any URLs present\n"
-            "- Dates if available\n"
-            "- Categories or types\n"
-            "- Tags or labels\n"
-            "- Ratings if present\n"
-            "- Price information\n"
-            "- Location/address if applicable\n"
-            "- Contact information\n"
-            "- Any other relevant metadata\n"
-            "\nFormat the output as structured data following the schema."
-        )),
+        instruction=final_instruction,
         input_format=config.get("INPUT_FORMAT", "markdown"),
         verbose=True,
     )

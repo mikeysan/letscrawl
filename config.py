@@ -60,6 +60,12 @@ DEFAULT_CONFIG = {
         Extract this information for each dental clinic card or listing
         found in the content.
         """,
+    },
+    # Translation Configuration
+    "TRANSLATION_CONFIG": {
+        "ENABLED": False,
+        "TARGET_LANGUAGE": "en",
+        "TEXT_FIELDS": ["title", "description", "content"],
     }
 }
 
@@ -254,3 +260,37 @@ CONFIGS = {
         }
     }
 }
+
+
+def get_translation_instruction(
+    base_instruction: str,
+    target_language: str,
+    text_fields: list[str] = None
+) -> str:
+    """Augment extraction instruction with translation requirements."""
+    if text_fields is None:
+        text_fields = ["title", "description", "content"]
+
+    language_names = {
+        "en": "English", "fr": "French", "es": "Spanish",
+        "de": "German", "it": "Italian", "pt": "Portuguese",
+        "ar": "Arabic", "zh": "Chinese", "ja": "Japanese",
+    }
+    language_name = language_names.get(target_language, target_language)
+
+    translation_augmentation = f"""
+
+TRANSLATION REQUIREMENT:
+After extracting the information, translate the following text fields to {language_name} ({target_language}):
+- {', '.join(text_fields)}
+
+Translation Guidelines:
+1. Only translate the specified text fields ({', '.join(text_fields)})
+2. Do NOT translate: URLs, dates, ratings, numerical values, or structured data
+3. Maintain the original format and structure of the data
+4. If text is already in {language_name}, return it as-is (no translation needed)
+5. Ensure the translation captures the original meaning and context
+6. For proper nouns (names, places, brands), transliterate appropriately
+"""
+
+    return base_instruction + translation_augmentation

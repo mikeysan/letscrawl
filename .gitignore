@@ -105,3 +105,8 @@ secrets/
 .local/
 tmp/
 temp/
+
+# Output files
+*.csv
+items.csv
+complete_items.csv

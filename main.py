@@ -27,8 +27,12 @@ from utils.scraper_utils import (
 load_dotenv()
 
 
-def parse_args() -> str:
-    """Parse command line arguments."""
+def parse_args() -> tuple[str, list[str] | None, bool, str]:
+    """Parse command line arguments.
+
+    Returns:
+        tuple: (config_name, urls, translate, target_language)
+    """
     # Get available configurations
     default_configs = ["dental", "minimal", "detailed"]
     custom_configs = [k for k in CONFIGS.keys() if k not in default_configs]
@@ -61,7 +65,23 @@ def parse_args() -> str:
         action="store_true",
         help="List available configurations and exit"
     )
-    
+    parser.add_argument(
+        "--urls",
+        nargs="+",
+        help="URLs to scan for RSS feeds (only for --config rss)"
+    )
+    parser.add_argument(
+        "--translate",
+        action="store_true",
+        help="Enable translation of extracted content to target language"
+    )
+    parser.add_argument(
+        "--target-language",
+        type=str,
+        default="en",
+        help="Target language for translation (default: en, e.g., 'fr' for French, 'es' for Spanish)"
+    )
+
     args = parser.parse_args()
 
     if args.list:
@@ -77,7 +97,7 @@ def parse_args() -> str:
         sys.exit(0)
 
     # mypy: args.config is guaranteed to be str when --list is not used
-    return str(args.config)
+    return str(args.config), getattr(args, 'urls', None), args.translate, args.target_language
 
 
 def get_config(template: str) -> Dict[str, Any]:
@@ -90,17 +110,28 @@ def get_config(template: str) -> Dict[str, Any]:
     return CONFIGS[template]
 
 
-async def crawl_items(config: dict[str, Any], rss_mode: bool = False) -> None:
+async def crawl_items(
+    config: dict[str, Any],
+    rss_mode: bool = False,
+    translate: bool = False,
+    target_language: str = "en"
+) -> None:
     """
     Main function to crawl and extract data from websites.
 
     Args:
         config: Dictionary containing crawler configuration
         rss_mode: Whether to enable RSS feed validation mode
+        translate: Whether to enable translation of extracted content
+        target_language: Target language code for translation
     """
     # Initialize configurations
     browser_config = get_browser_config(config["CRAWLER_CONFIG"])
-    llm_strategy = get_llm_strategy(config["LLM_CONFIG"])
+    llm_strategy = get_llm_strategy(
+        config["LLM_CONFIG"],
+        translate=translate,
+        target_language=target_language
+    )
     session_id = "crawl_session"
 
     # Initialize state variables
@@ -258,8 +289,25 @@ async def crawl_items(config: dict[str, Any], rss_mode: bool = False) -> None:
 async def main() -> None:
     """Entry point of the script."""
     # Get configuration template from command line
-    template = parse_args()
+    template, urls, translate, target_language = parse_args()
     config = get_config(template)
+
+    # If --urls provided with rss config, override SITES list
+    if template == "rss" and urls:
+        # Get the CSS selector from the first site in the default config
+        css_selector = CONFIGS["rss"]["SITES"][0]["CSS_SELECTOR"]
+        # Create dynamic site entries for each URL
+        CONFIGS["rss"]["SITES"] = [
+            {
+                "name": url,
+                "BASE_URL": url,
+                "CSS_SELECTOR": css_selector
+            }
+            for url in urls
+        ]
+        # Update config reference
+        config = CONFIGS["rss"]
+        logger.info(f"Using custom URLs: {', '.join(urls)}")
 
     # Detect if we're in RSS mode
     rss_mode = template == "rss" or config.get("REQUIRED_KEYS") == ["url"]
@@ -273,7 +321,12 @@ async def main() -> None:
         sys.exit(1)
 
     try:
-        await crawl_items(config, rss_mode=rss_mode)
+        await crawl_items(
+            config,
+            rss_mode=rss_mode,
+            translate=translate,
+            target_language=target_language
+        )
     except KeyboardInterrupt:
         logger.warning("\nCrawling interrupted by user.")
     except Exception as e:
