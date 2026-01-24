@@ -1,6 +1,7 @@
 # config.py
 
 import os
+from typing import Any
 
 # Default configuration for dental clinics example
 DEFAULT_CONFIG = {
@@ -70,7 +71,7 @@ DEFAULT_CONFIG = {
 }
 
 # Example configurations for different use cases
-CONFIGS = {
+CONFIGS: dict[str, dict[str, Any]] = {
     "dental": DEFAULT_CONFIG,
     "minimal": {
         **DEFAULT_CONFIG,
@@ -265,7 +266,7 @@ CONFIGS = {
 def get_translation_instruction(
     base_instruction: str,
     target_language: str,
-    text_fields: list[str] = None
+    text_fields: list[str] | None = None
 ) -> str:
     """Augment extraction instruction with translation requirements."""
     if text_fields is None:
