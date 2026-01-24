@@ -110,3 +110,9 @@ temp/
 *.csv
 items.csv
 complete_items.csv
+
+# Memory Bank
+memory-bank/
+
+# Plans
+plans/
