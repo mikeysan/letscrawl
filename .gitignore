@@ -116,3 +116,6 @@ memory-bank/
 
 # Plans
 plans/
+
+# Pre-commit
+.pre-commit-cache/

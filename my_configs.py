@@ -13,18 +13,16 @@ test_config = {
     "BASE_URL": "https://www.etsy.com/uk/",
     "CSS_SELECTOR": ".product-card",  # Product card container
     "REQUIRED_KEYS": [
-        "title",      # Product name
-        "price",      # Product price
-        "url"         # Product URL
+        "title",  # Product name
+        "price",  # Product price
+        "url",  # Product URL
     ],
-    "OPTIONAL_KEYS": [
-        "description"
-    ],
+    "OPTIONAL_KEYS": ["description"],
     "CRAWLER_CONFIG": {
         "MULTI_PAGE": False,  # Single page
-        "HEADLESS": True,    # Show browser for demonstration
+        "HEADLESS": True,  # Show browser for demonstration
         "VERBOSE_LOGGING": True,
-        "DELAY_BETWEEN_PAGES": 1
+        "DELAY_BETWEEN_PAGES": 1,
     },
     "LLM_CONFIG": {
         "PROVIDER": "groq/llama-3.3-70b-versatile",
@@ -47,12 +45,12 @@ test_config = {
         - Clean up any extra whitespace from text
         
         Format the output as structured data following the schema.
-        """
-    }
+        """,
+    },
 }
 
 # Add to CONFIGS dictionary
-CONFIGS['etsy'] = test_config
+CONFIGS["etsy"] = test_config
 
 # Show helpful message when this file is run directly
 if __name__ == "__main__":

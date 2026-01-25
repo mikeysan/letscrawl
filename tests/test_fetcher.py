@@ -20,8 +20,7 @@ class TestAsyncFetcher:
         mock_robots_checker = Mock(spec=RobotsTxtChecker)
 
         fetcher = AsyncFetcher(
-            rate_limiter=mock_rate_limiter,
-            robots_checker=mock_robots_checker
+            rate_limiter=mock_rate_limiter, robots_checker=mock_robots_checker
         )
 
         assert fetcher.rate_limiter is mock_rate_limiter
@@ -57,7 +56,7 @@ class TestAsyncFetcherFetch:
             return web.Response(text="<html><body>Test Content</body></html>")
 
         app = web.Application()
-        app.router.add_get('/', handler)
+        app.router.add_get("/", handler)
 
         from aiohttp.test_utils import TestClient, TestServer
 
@@ -66,7 +65,7 @@ class TestAsyncFetcherFetch:
         await client.start_server()
 
         try:
-            url = str(server.make_url('/'))
+            url = str(server.make_url("/"))
 
             mock_rate_limiter = Mock(spec=RateLimiter)
             mock_rate_limiter.acquire = AsyncMock()
@@ -75,12 +74,11 @@ class TestAsyncFetcherFetch:
             mock_robots_checker.can_fetch.return_value = True
 
             fetcher = AsyncFetcher(
-                rate_limiter=mock_rate_limiter,
-                robots_checker=mock_robots_checker
+                rate_limiter=mock_rate_limiter, robots_checker=mock_robots_checker
             )
 
             # Patch is_safe_url to allow localhost in tests
-            with patch('fetcher.is_safe_url', return_value=True):
+            with patch("fetcher.is_safe_url", return_value=True):
                 result = await fetcher.fetch(url)
 
             assert result == "<html><body>Test Content</body></html>"
@@ -98,11 +96,10 @@ class TestAsyncFetcherFetch:
         mock_robots_checker.can_fetch.return_value = True
 
         fetcher = AsyncFetcher(
-            rate_limiter=mock_rate_limiter,
-            robots_checker=mock_robots_checker
+            rate_limiter=mock_rate_limiter, robots_checker=mock_robots_checker
         )
 
-        with patch('aiohttp.ClientSession', side_effect=Exception("Network error")):
+        with patch("aiohttp.ClientSession", side_effect=Exception("Network error")):
             result = await fetcher.fetch("https://example.com")
 
             assert result is None
@@ -116,8 +113,7 @@ class TestAsyncFetcherFetch:
         mock_robots_checker.can_fetch.return_value = True
 
         fetcher = AsyncFetcher(
-            rate_limiter=mock_rate_limiter,
-            robots_checker=mock_robots_checker
+            rate_limiter=mock_rate_limiter, robots_checker=mock_robots_checker
         )
 
         # Mock to raise a non-ClientError exception
@@ -144,8 +140,7 @@ class TestAsyncFetcherSecurityIntegration:
         mock_robots_checker.can_fetch.return_value = False  # Disallowed
 
         fetcher = AsyncFetcher(
-            rate_limiter=mock_rate_limiter,
-            robots_checker=mock_robots_checker
+            rate_limiter=mock_rate_limiter, robots_checker=mock_robots_checker
         )
 
         result = await fetcher.fetch("https://example.com/disallowed-page")
@@ -172,13 +167,11 @@ class TestAsyncFetcherSecurityIntegration:
         mock_robots_checker.can_fetch.return_value = True
 
         fetcher = AsyncFetcher(
-            rate_limiter=mock_rate_limiter,
-            robots_checker=mock_robots_checker
+            rate_limiter=mock_rate_limiter, robots_checker=mock_robots_checker
         )
 
         with patch(
-            'aiohttp.ClientSession',
-            side_effect=aiohttp.ClientError("Connection error")
+            "aiohttp.ClientSession", side_effect=aiohttp.ClientError("Connection error")
         ):
             result = await fetcher.fetch("https://example.com")
 
@@ -195,19 +188,19 @@ class TestAsyncFetcherSecurityIntegration:
             return web.Response(text="Not Found", status=404)
 
         app = web.Application()
-        app.router.add_get('/', handler)
+        app.router.add_get("/", handler)
 
         server = TestServer(app)
         client = TestClient(server)
         await client.start_server()
 
         try:
-            url = str(server.make_url('/'))
+            url = str(server.make_url("/"))
 
             fetcher = AsyncFetcher(delay=0)  # No delay for tests
 
             # Patch is_safe_url to allow localhost in tests
-            with patch('fetcher.is_safe_url', return_value=True):
+            with patch("fetcher.is_safe_url", return_value=True):
                 result = await fetcher.fetch(url)
 
             assert result is None
@@ -225,8 +218,8 @@ class TestAsyncFetcherRetry:
         fetcher = AsyncFetcher()
 
         # Verify the method is wrapped by tenacity
-        assert hasattr(fetcher._fetch_with_retry, 'retry')
-        assert hasattr(fetcher._fetch_with_retry, '__wrapped__')
+        assert hasattr(fetcher._fetch_with_retry, "retry")
+        assert hasattr(fetcher._fetch_with_retry, "__wrapped__")
 
     async def test_fetch_retries_configured_correctly(self):
         """Test that retry logic is configured with correct parameters."""
@@ -242,7 +235,7 @@ class TestAsyncFetcherRetry:
 
         # Check that it will stop after 3 attempts
         # (tenacity stores this internally, we just verify it exists)
-        assert hasattr(retry_state, 'stop')
+        assert hasattr(retry_state, "stop")
 
         # Check that it has a wait strategy
-        assert hasattr(retry_state, 'wait')
+        assert hasattr(retry_state, "wait")

@@ -29,7 +29,7 @@ def validate_rss_feed(url: str) -> bool:
         bool: True if the RSS feed is valid, False otherwise.
     """
     try:
-        response = requests.get(url, timeout=10, headers={'User-Agent': 'Mozilla/5.0'})
+        response = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
         if response.status_code != 200:
             logger.info(f"RSS feed returned status {response.status_code}: {url}")
             return False
@@ -59,7 +59,7 @@ def get_browser_config(config: Dict[str, Any]) -> BrowserConfig:
     return BrowserConfig(
         browser_type="chromium",
         headless=config.get("HEADLESS", True),
-        verbose=config.get("VERBOSE_LOGGING", True)
+        verbose=config.get("VERBOSE_LOGGING", True),
     )
 
 
@@ -87,9 +87,7 @@ def validate_llm_config(config: Dict[str, Any]) -> None:
 
 
 def get_llm_strategy(
-    config: Dict[str, Any],
-    translate: bool = False,
-    target_language: str = "en"
+    config: Dict[str, Any], translate: bool = False, target_language: str = "en"
 ) -> LLMExtractionStrategy:
     """
     Returns the configuration for the language model extraction strategy.
@@ -104,32 +102,36 @@ def get_llm_strategy(
     """
     validate_llm_config(config)
 
-    base_instruction = config.get("INSTRUCTION", (
-        "Extract information from the content with these details:\n"
-        "- Title/name of the item\n"
-        "- Description or main content\n"
-        "- Any URLs present\n"
-        "- Dates if available\n"
-        "- Categories or types\n"
-        "- Tags or labels\n"
-        "- Ratings if present\n"
-        "- Price information\n"
-        "- Location/address if applicable\n"
-        "- Contact information\n"
-        "- Any other relevant metadata\n"
-        "\nFormat the output as structured data following the schema."
-    ))
+    base_instruction = config.get(
+        "INSTRUCTION",
+        (
+            "Extract information from the content with these details:\n"
+            "- Title/name of the item\n"
+            "- Description or main content\n"
+            "- Any URLs present\n"
+            "- Dates if available\n"
+            "- Categories or types\n"
+            "- Tags or labels\n"
+            "- Ratings if present\n"
+            "- Price information\n"
+            "- Location/address if applicable\n"
+            "- Contact information\n"
+            "- Any other relevant metadata\n"
+            "\nFormat the output as structured data following the schema."
+        ),
+    )
 
     # Apply translation if enabled
     if translate:
         from config import get_translation_instruction
+
         translation_config = config.get("TRANSLATION_CONFIG", {})
-        text_fields = translation_config.get("TEXT_FIELDS", ["title", "description", "content"])
+        text_fields = translation_config.get(
+            "TEXT_FIELDS", ["title", "description", "content"]
+        )
 
         final_instruction = get_translation_instruction(
-            base_instruction,
-            target_language,
-            text_fields
+            base_instruction, target_language, text_fields
         )
         logger.info(f"Translation enabled: {text_fields} → {target_language}")
     else:
@@ -169,7 +171,7 @@ async def check_no_results(
         config=CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
             session_id=session_id,
-            wait_until="domcontentloaded",  # Wait for DOM content to load (faster, more reliable)
+            wait_until="domcontentloaded",  # Wait for DOM content to load
         ),
     )
 
@@ -184,8 +186,10 @@ async def check_no_results(
             "No results",
             "Empty",
         ]
-        return any(phrase.lower() in result.cleaned_html.lower() 
-                  for phrase in no_results_phrases)
+        return any(
+            phrase.lower() in result.cleaned_html.lower()
+            for phrase in no_results_phrases
+        )
     else:
         logger.info(f"Error checking for no results: {result.error_message}")
 
@@ -230,7 +234,7 @@ async def fetch_and_process_page(
             url = f"{base_url}&page={page_number}"
         else:
             url = f"{base_url}?page={page_number}"
-    
+
     logger.info(f"\nProcessing page {page_number}: {url}")
 
     # Check for no results
@@ -248,7 +252,7 @@ async def fetch_and_process_page(
             extraction_strategy=llm_strategy,
             css_selector=css_selector,
             session_id=session_id,
-            wait_until="domcontentloaded"  # Wait for DOM content to load (faster, more reliable)
+            wait_until="domcontentloaded",  # Wait for DOM content to load
         ),
     )
     logger.debug(f"LLM extraction completed for page {page_number}")
@@ -270,11 +274,11 @@ async def fetch_and_process_page(
         if not extracted_data:
             logger.info(f"No data found on page {page_number}.")
             return [], False
-            
+
         if True:  # Always show extracted data for debugging
             logger.info(f"Raw extracted data from page {page_number}:")
             print(json.dumps(extracted_data, indent=2))
-        
+
     except json.JSONDecodeError as e:
         logger.info(f"Error parsing JSON from page {page_number}: {str(e)}")
         return [], False

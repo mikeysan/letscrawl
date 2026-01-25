@@ -54,10 +54,10 @@ def is_safe_url(url: str) -> bool:
     """
     try:
         parsed = urlparse(url)
-        hostname = parsed.hostname or parsed.netloc.split(':')[0]
+        hostname = parsed.hostname or parsed.netloc.split(":")[0]
 
         # Block localhost
-        if hostname.lower() in ('localhost', 'localhost.localdomain'):
+        if hostname.lower() in ("localhost", "localhost.localdomain"):
             return False
 
         # Try to parse as IP address
@@ -77,7 +77,7 @@ def is_safe_url(url: str) -> bool:
                 return False
 
             # Block AWS metadata specifically
-            if ip == ipaddress.ip_address('169.254.169.254'):
+            if ip == ipaddress.ip_address("169.254.169.254"):
                 return False
 
         except ValueError:
