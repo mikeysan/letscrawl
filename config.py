@@ -265,7 +265,7 @@ CONFIGS = {
 def get_translation_instruction(
     base_instruction: str,
     target_language: str,
-    text_fields: list[str] = None
+    text_fields: list[str] | None = None
 ) -> str:
     """Augment extraction instruction with translation requirements."""
     if text_fields is None:

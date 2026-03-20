@@ -12,6 +12,7 @@ from crawl4ai import (
     LLMConfig,
     LLMExtractionStrategy,
 )
+from crawl4ai.models import CrawlResult, CrawlResultContainer
 
 from models.item import ScrapedItem
 from utils.data_utils import is_complete_item, is_duplicate_item
@@ -164,7 +165,8 @@ async def check_no_results(
     Returns:
         bool: True if "No Results Found" message is found, False otherwise.
     """
-    result = await crawler.arun(
+    # Crawl the page and get the result container
+    crawl_result_container = await crawler.arun(
         url=url,
         config=CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
@@ -172,8 +174,13 @@ async def check_no_results(
             wait_until="domcontentloaded",  # Wait for DOM content to load (faster, more reliable)
         ),
     )
+    
+    # Extract the actual CrawlResult from the container
+    # Based on crawl4ai 0.8.x, arun() returns a CrawlResultContainer
+    # which contains exactly one CrawlResult object at index 0
+    result: CrawlResult = crawl_result_container[0]
 
-    if result.success:
+    if result.success and result.cleaned_html:
         # Check for common "no results" indicators
         no_results_phrases = [
             "No Results Found",
@@ -185,7 +192,7 @@ async def check_no_results(
             "Empty",
         ]
         return any(phrase.lower() in result.cleaned_html.lower() 
-                  for phrase in no_results_phrases)
+                   for phrase in no_results_phrases)
     else:
         logger.info(f"Error checking for no results: {result.error_message}")
 
@@ -241,16 +248,22 @@ async def fetch_and_process_page(
 
     # Fetch page content with additional wait time
     logger.debug(f"Starting LLM extraction for page {page_number}...")
-    result = await crawler.arun(
+    # Crawl the page and get the result
+    # Based on crawl4ai 0.8.x, arun() returns a CrawlResultContainer when not using arun_many
+    crawl_result_container = await crawler.arun(
         url=url,
         config=CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
             extraction_strategy=llm_strategy,
             css_selector=css_selector,
             session_id=session_id,
-            wait_until="domcontentloaded"  # Wait for DOM content to load (faster, more reliable)
+            wait_until="domcontentloaded",  # Wait for DOM content to load (faster, more reliable)
         ),
     )
+    
+    # Extract the actual CrawlResult from the container
+    # The container holds exactly one CrawlResult object that we can access by index
+    result: CrawlResult = crawl_result_container[0]
     logger.debug(f"LLM extraction completed for page {page_number}")
 
     if not result.success:
