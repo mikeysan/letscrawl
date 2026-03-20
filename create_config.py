@@ -11,6 +11,7 @@ def get_input(prompt: str, default: str = "") -> str:
         return result if result else default
     return input(f"{prompt}: ").strip()
 
+
 def get_list_input(prompt: str) -> list[str]:
     """Get a list of items from user input."""
     logger.info(f"\n{prompt}")
@@ -26,6 +27,7 @@ def get_list_input(prompt: str) -> list[str]:
         items.append(item)
     return items
 
+
 def get_bool_input(prompt: str, default: bool = True) -> bool:
     """Get a yes/no response from user input."""
     default_str = "Y/n" if default else "y/N"
@@ -38,6 +40,7 @@ def get_bool_input(prompt: str, default: bool = True) -> bool:
         if response in ["n", "no"]:
             return False
         logger.info("Please enter 'y' or 'n'")
+
 
 def get_int_input(prompt: str, default: int, min_val: int = 1) -> int:
     """Get an integer value from user input."""
@@ -54,10 +57,11 @@ def get_int_input(prompt: str, default: int, min_val: int = 1) -> int:
         except ValueError:
             logger.info("Please enter a valid number")
 
+
 def create_config() -> Dict[str, Any]:
     """Create a new crawler configuration interactively."""
     logger.info("\n🤖 DeepSeek Web Crawler Configuration Generator\n")
-    
+
     # Basic Information
     logger.info("📝 Basic Information")
     print("-" * 50)
@@ -96,7 +100,7 @@ def create_config() -> Dict[str, Any]:
     logger.info("Define extraction instructions for the LLM.")
     logger.info("Default instructions will be generated based on your fields.")
     custom_instructions = get_bool_input("Do you want to provide custom instructions?")
-    
+
     if custom_instructions:
         logger.info("\nEnter your custom instructions. Press Enter twice when done:")
         instructions: list[str] = []
@@ -136,16 +140,16 @@ def create_config() -> Dict[str, Any]:
             "EXTRACTION_TYPE": "schema",
             "INPUT_FORMAT": "markdown",
             "INSTRUCTION": llm_instructions,
-        }
+        },
     }
 
     # Save the configuration
     logger.info("\n💾 Saving Configuration")
     print("-" * 50)
-    
+
     # Format the configuration as Python code
     config_str = f'"{config_name}": {{\n'
-    config_str += '    **DEFAULT_CONFIG,\n'
+    config_str += "    **DEFAULT_CONFIG,\n"
     for key, value in config.items():
         if isinstance(value, str):
             config_str += f'    "{key}": "{value}",\n'
@@ -161,21 +165,21 @@ def create_config() -> Dict[str, Any]:
         try:
             with open("config.py", "r") as f:
                 content = f.read()
-            
+
             # Find the end of the CONFIGS dictionary
             configs_end = content.rindex("}")
-            
+
             # Insert the new configuration before the closing brace
             new_content = (
-                content[:configs_end] +
-                ",\n\n    # Added by configuration generator\n    " +
-                config_str +
-                content[configs_end:]
+                content[:configs_end]
+                + ",\n\n    # Added by configuration generator\n    "
+                + config_str
+                + content[configs_end:]
             )
-            
+
             with open("config.py", "w") as f:
                 f.write(new_content)
-            
+
             logger.info("\n✅ Configuration added to config.py successfully!")
             print(
                 "\nYou can now run your crawler with:\n"
@@ -187,8 +191,9 @@ def create_config() -> Dict[str, Any]:
                 "Please manually add the configuration shown above to your"
                 " config.py file."
             )
-    
+
     return config
+
 
 if __name__ == "__main__":
     try:

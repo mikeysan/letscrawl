@@ -14,6 +14,7 @@ try:
     from my_configs import *  # noqa: F403
 except ImportError:
     from utils.logger import logger
+
     logger.info("No custom configurations found. Using default templates only.")
 
 from utils.data_utils import save_items_to_csv
@@ -36,14 +37,14 @@ def parse_args() -> tuple[str, list[str] | None, bool, str]:
     # Get available configurations
     default_configs = ["dental", "minimal", "detailed"]
     custom_configs = [k for k in CONFIGS.keys() if k not in default_configs]
-    
+
     # Create help text
     help_text = "Configuration to use. Available options:\n"
     help_text += "\nDefault templates:\n"
     for config in default_configs:
         if config in CONFIGS:
             help_text += f"  {config}: For {config} scraping\n"
-    
+
     if custom_configs:
         help_text += "\nCustom configurations:\n"
         for config in custom_configs:
@@ -51,7 +52,7 @@ def parse_args() -> tuple[str, list[str] | None, bool, str]:
 
     parser = argparse.ArgumentParser(
         description="Deep Seek Web Crawler",
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
         "--config",
@@ -61,25 +62,22 @@ def parse_args() -> tuple[str, list[str] | None, bool, str]:
         help=help_text,
     )
     parser.add_argument(
-        "--list",
-        action="store_true",
-        help="List available configurations and exit"
+        "--list", action="store_true", help="List available configurations and exit"
     )
     parser.add_argument(
-        "--urls",
-        nargs="+",
-        help="URLs to scan for RSS feeds (only for --config rss)"
+        "--urls", nargs="+", help="URLs to scan for RSS feeds (only for --config rss)"
     )
     parser.add_argument(
         "--translate",
         action="store_true",
-        help="Enable translation of extracted content to target language"
+        help="Enable translation of extracted content to target language",
     )
     parser.add_argument(
         "--target-language",
         type=str,
         default="en",
-        help="Target language for translation (default: en, e.g., 'fr' for French, 'es' for Spanish)"
+        help="Target language for translation (default: en, e.g., 'fr' for French, "
+        "'es' for Spanish)",
     )
 
     args = parser.parse_args()
@@ -97,7 +95,12 @@ def parse_args() -> tuple[str, list[str] | None, bool, str]:
         sys.exit(0)
 
     # mypy: args.config is guaranteed to be str when --list is not used
-    return str(args.config), getattr(args, 'urls', None), args.translate, args.target_language
+    return (
+        str(args.config),
+        getattr(args, "urls", None),
+        args.translate,
+        args.target_language,
+    )
 
 
 def get_config(template: str) -> Dict[str, Any]:
@@ -114,7 +117,7 @@ async def crawl_items(
     config: dict[str, Any],
     rss_mode: bool = False,
     translate: bool = False,
-    target_language: str = "en"
+    target_language: str = "en",
 ) -> None:
     """
     Main function to crawl and extract data from websites.
@@ -128,9 +131,7 @@ async def crawl_items(
     # Initialize configurations
     browser_config = get_browser_config(config["CRAWLER_CONFIG"])
     llm_strategy = get_llm_strategy(
-        config["LLM_CONFIG"],
-        translate=translate,
-        target_language=target_language
+        config["LLM_CONFIG"], translate=translate, target_language=target_language
     )
     session_id = "crawl_session"
 
@@ -157,13 +158,13 @@ async def crawl_items(
                 base_url = site["BASE_URL"]
                 css_selector = site["CSS_SELECTOR"]
 
-                logger.info(f"\n{'='*60}")
+                logger.info(f"\n{'=' * 60}")
                 logger.info(f"Crawling: {site_name}")
                 logger.info(f"URL: {base_url}")
                 logger.info(f"Mode: {'Multi-page' if multi_page else 'Single-page'}")
                 if multi_page:
                     logger.info(f"Max pages: {max_pages}")
-                logger.info(f"{'='*60}\n")
+                logger.info(f"{'=' * 60}\n")
 
                 page_number = 1
                 while True:
@@ -181,7 +182,9 @@ async def crawl_items(
                     )
 
                     if no_results_found:
-                        logger.info("\nNo more items found. Ending crawl for this site.")
+                        logger.info(
+                            "\nNo more items found. Ending crawl for this site."
+                        )
                         break
 
                     if not items:
@@ -197,17 +200,18 @@ async def crawl_items(
 
                     # Check if we should continue to next page
                     if not multi_page or page_number >= max_pages:
-                        logger.info(
-                            f"\nReached {'page limit' if multi_page else 'single page mode'}."
-                            " Ending crawl for this site."
-                        )
+                        mode = "page limit" if multi_page else "single page mode"
+                        logger.info(f"\nReached {mode}. Ending crawl for this site.")
                         break
 
                     page_number += 1
                     logger.info(f"\nMoving to page {page_number}...")
                     await asyncio.sleep(delay)
 
-                logger.info(f"\nCompleted crawling {site_name}. Total items so far: {len(all_items)}")
+                logger.info(
+                    f"\nCompleted crawling {site_name}. "
+                    f"Total items so far: {len(all_items)}"
+                )
                 await asyncio.sleep(delay)  # Delay between sites
     else:
         # Single site crawling (original behavior)
@@ -252,10 +256,8 @@ async def crawl_items(
 
                 # Check if we should continue to next page
                 if not multi_page or page_number >= max_pages:
-                    logger.info(
-                        f"\nReached {'page limit' if multi_page else 'single page mode'}."
-                        " Ending crawl."
-                    )
+                    mode = "page limit" if multi_page else "single page mode"
+                    logger.info(f"\nReached {mode}. Ending crawl.")
                     break
 
                 page_number += 1
@@ -270,13 +272,13 @@ async def crawl_items(
 
         # Save complete items (those with all required fields)
         complete_items = [
-            item for item in all_items
+            item
+            for item in all_items
             if all(key in item and item[key] for key in required_keys)
         ]
         save_items_to_csv(complete_items, "complete_items.csv")
         logger.info(
-            "Saved %d complete items to 'complete_items.csv'",
-            len(complete_items)
+            "Saved %d complete items to 'complete_items.csv'", len(complete_items)
         )
     else:
         logger.warning("\nNo items were found during the crawl.")
@@ -298,12 +300,7 @@ async def main() -> None:
         css_selector = CONFIGS["rss"]["SITES"][0]["CSS_SELECTOR"]
         # Create dynamic site entries for each URL
         CONFIGS["rss"]["SITES"] = [
-            {
-                "name": url,
-                "BASE_URL": url,
-                "CSS_SELECTOR": css_selector
-            }
-            for url in urls
+            {"name": url, "BASE_URL": url, "CSS_SELECTOR": css_selector} for url in urls
         ]
         # Update config reference
         config = CONFIGS["rss"]
@@ -315,6 +312,7 @@ async def main() -> None:
     # Validate LLM configuration before starting crawl
     try:
         from utils.scraper_utils import validate_llm_config
+
         validate_llm_config(config["LLM_CONFIG"])
     except ValueError as e:
         logger.error(f"Configuration error: {e}")
@@ -325,7 +323,7 @@ async def main() -> None:
             config,
             rss_mode=rss_mode,
             translate=translate,
-            target_language=target_language
+            target_language=target_language,
         )
     except KeyboardInterrupt:
         logger.warning("\nCrawling interrupted by user.")

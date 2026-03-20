@@ -24,7 +24,7 @@ class WebCrawler:
         start_url: str,
         max_pages: int = 10,
         delay: float = 1.0,
-        user_agent: str = "RespectfulBot"
+        user_agent: str = "RespectfulBot",
     ):
         """
         Initialize the web crawler.
@@ -53,11 +53,11 @@ class WebCrawler:
         Returns:
             List of normalized absolute URLs
         """
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, "html.parser")
         links = []
 
-        for tag in soup.find_all('a', href=True):
-            href = tag['href']
+        for tag in soup.find_all("a", href=True):
+            href = tag["href"]
             # Normalize the URL
             absolute_url = normalize_url(href, current_url)
             links.append(absolute_url)
@@ -128,11 +128,7 @@ class WebCrawler:
 
 async def main() -> None:
     """Example usage of the web crawler."""
-    crawler = WebCrawler(
-        start_url="https://example.com",
-        max_pages=5,
-        delay=1.0
-    )
+    crawler = WebCrawler(start_url="https://example.com", max_pages=5, delay=1.0)
 
     results = await crawler.crawl()
 

@@ -26,7 +26,7 @@ class AsyncFetcher:
         rate_limiter: RateLimiter | None = None,
         robots_checker: RobotsTxtChecker | None = None,
         delay: float = 1.0,
-        user_agent: str = "RespectfulBot"
+        user_agent: str = "RespectfulBot",
     ):
         """
         Initialize the async fetcher.
@@ -41,9 +41,7 @@ class AsyncFetcher:
             rate_limiter if rate_limiter is not None else RateLimiter(delay=delay)
         )
         self.robots_checker = (
-            robots_checker
-            if robots_checker is not None
-            else RobotsTxtChecker()
+            robots_checker if robots_checker is not None else RobotsTxtChecker()
         )
         self.user_agent = user_agent
 

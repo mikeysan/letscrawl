@@ -19,16 +19,16 @@ class TestRobotsTxtChecker:
         mock_robot_parser = Mock()
         mock_robot_parser.can_fetch.return_value = True
 
-        patch_target = 'security.urllib.robotparser.RobotFileParser'
+        patch_target = "security.urllib.robotparser.RobotFileParser"
         with patch(patch_target, return_value=mock_robot_parser):
             checker = RobotsTxtChecker()
-            result = checker.can_fetch('MyBot', 'https://example.com/page')
+            result = checker.can_fetch("MyBot", "https://example.com/page")
 
             assert result is True
             mock_robot_parser.set_url.assert_called_once()
             mock_robot_parser.read.assert_called_once()
             mock_robot_parser.can_fetch.assert_called_once_with(
-                'MyBot', 'https://example.com/page'
+                "MyBot", "https://example.com/page"
             )
 
     def test_can_fetch_blocks_disallowed_path(self):
@@ -36,14 +36,14 @@ class TestRobotsTxtChecker:
         mock_robot_parser = Mock()
         mock_robot_parser.can_fetch.return_value = False
 
-        patch_target = 'security.urllib.robotparser.RobotFileParser'
+        patch_target = "security.urllib.robotparser.RobotFileParser"
         with patch(patch_target, return_value=mock_robot_parser):
             checker = RobotsTxtChecker()
-            result = checker.can_fetch('MyBot', 'https://example.com/admin')
+            result = checker.can_fetch("MyBot", "https://example.com/admin")
 
             assert result is False
             mock_robot_parser.can_fetch.assert_called_once_with(
-                'MyBot', 'https://example.com/admin'
+                "MyBot", "https://example.com/admin"
             )
 
     def test_can_fetch_caches_robots_txt_per_domain(self):
@@ -51,13 +51,13 @@ class TestRobotsTxtChecker:
         mock_robot_parser = Mock()
         mock_robot_parser.can_fetch.return_value = True
 
-        patch_target = 'security.urllib.robotparser.RobotFileParser'
+        patch_target = "security.urllib.robotparser.RobotFileParser"
         with patch(patch_target, return_value=mock_robot_parser):
             checker = RobotsTxtChecker()
 
             # Fetch from same domain twice
-            checker.can_fetch('MyBot', 'https://example.com/page1')
-            checker.can_fetch('MyBot', 'https://example.com/page2')
+            checker.can_fetch("MyBot", "https://example.com/page1")
+            checker.can_fetch("MyBot", "https://example.com/page2")
 
             # Should only set URL and read once (cached)
             assert mock_robot_parser.set_url.call_count == 1
@@ -68,13 +68,13 @@ class TestRobotsTxtChecker:
         mock_robot_parser = Mock()
         mock_robot_parser.can_fetch.return_value = True
 
-        patch_target = 'security.urllib.robotparser.RobotFileParser'
+        patch_target = "security.urllib.robotparser.RobotFileParser"
         with patch(patch_target, return_value=mock_robot_parser):
             checker = RobotsTxtChecker()
 
             # Fetch from different domains
-            checker.can_fetch('MyBot', 'https://example.com/page')
-            checker.can_fetch('MyBot', 'https://another.com/page')
+            checker.can_fetch("MyBot", "https://example.com/page")
+            checker.can_fetch("MyBot", "https://another.com/page")
 
             # Should fetch robots.txt twice (different domains)
             assert mock_robot_parser.set_url.call_count == 2

@@ -8,11 +8,11 @@ from utils.logger import logger
 def is_duplicate_item(title: str, seen_titles: Set[str]) -> bool:
     """
     Check if an item with the given title has already been processed.
-    
+
     Args:
         title: Title/name of the item to check
         seen_titles: Set of previously seen titles
-    
+
     Returns:
         bool: True if the title has been seen before
     """
@@ -56,10 +56,10 @@ def save_items_to_csv(data: list[dict[str, str]], filename: str) -> None:
     with open(filename, mode="w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
-        
+
         # Write each row, ensuring missing fields are handled
         for item in data:
             row = {field: item.get(field, "") for field in fieldnames}
             writer.writerow(row)
-            
+
     logger.info(f"Saved {len(data)} records to '{filename}'.")

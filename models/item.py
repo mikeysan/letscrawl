@@ -9,6 +9,7 @@ class ScrapedItem(BaseModel):
     All fields are optional since different scraping configurations
     may require different subsets of fields.
     """
+
     title: Optional[str] = None
     description: Optional[str] = None
     content: Optional[str] = None  # Main article text
