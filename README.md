@@ -46,7 +46,8 @@ LetsCrawl requires Python 3.12 or later. If you don't have Python installed, you
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # On Windows
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+# On Windows.
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 # Or with pip (works everywhere)
 pip install uv
@@ -91,7 +92,7 @@ GROQ_API_KEY=your_api_key_here
 Try the built-in news scraping configuration:
 
 ```bash
-python main.py --config news
+uv run main.py --config news
 ```
 
 This will collect articles from several African news sites and save them to:
@@ -110,10 +111,10 @@ LetsCrawl comes with several pre-built configurations for common tasks:
 
 | Configuration | What It Does | How to Use |
 |--------------|--------------|-------------|
-| `news` | Collects news articles from African news sites | `python main.py --config news` |
-| `rss` | Discovers RSS/Atom feed URLs from websites | `python main.py --config rss --urls https://cnn.com https://nytimes.com` |
-| `dental` | Scrapes dental clinic listings (example) | `python main.py --config dental` |
-| `etsy` | Collects product information from Etsy | `python main.py --config etsy` |
+| `news` | Collects news articles from African news sites | `uv run main.py --config news` |
+| `rss` | Discovers RSS/Atom feed URLs from websites | `uv run main.py --config rss --urls https://cnn.com https://nytimes.com` |
+| `dental` | Scrapes dental clinic listings (example) | `uv run main.py --config dental` |
+| `etsy` | Collects product information from Etsy | `uv run main.py --config etsy` |
 
 ### Customizing Crawls
 
@@ -137,13 +138,13 @@ For more advanced users, you can create completely custom configurations. See [A
 
 ```bash
 # List all available configurations
-python main.py --list
+uv run main.py --list
 
 # Crawl with translation (translate content to French)
-python main.py --config news --translate --target-language fr
+uv run main.py --config news --translate --target-language fr
 
 # Crawl specific RSS feeds
-python main.py --config rss --urls https://cnn.com https://bbc.com
+uv run main.py --config rss --urls https://cnn.com https://bbc.com
 ```
 
 ---
@@ -181,7 +182,7 @@ The exact columns depend on your configuration and what each website provides.
 **Solution**:
 
 ```bash
-python main.py --config news
+uv run main.py --config news
 ```
 
 This automatically collects articles from Seneweb (Senegal), The Namibian (Namibia), and New Times (Rwanda).
@@ -193,7 +194,7 @@ This automatically collects articles from Seneweb (Senegal), The Namibian (Namib
 **Solution**:
 
 ```bash
-python main.py --config rss --urls https://cnn.com https://nytimes.com https://bbc.com
+uv run main.py --config rss --urls https://cnn.com https://nytimes.com https://bbc.com
 ```
 
 This discovers RSS feed URLs and validates them.
@@ -205,7 +206,7 @@ This discovers RSS feed URLs and validates them.
 **Solution**:
 
 ```bash
-python main.py --config etsy
+uv run main.py --config etsy
 ```
 
 This collects product titles, prices, and descriptions.
@@ -217,7 +218,7 @@ This collects product titles, prices, and descriptions.
 **Solution**:
 
 ```bash
-python main.py --config news --translate --target-language en
+uv run main.py --config news --translate --target-language en
 ```
 
 This extracts content AND translates it in one step!
@@ -267,7 +268,7 @@ For more control, you can create custom configurations in Python:
 Then run:
 
 ```bash
-python main.py --config my_custom_news
+uv run main.py --config my_custom_news
 ```
 
 ### Understanding Key Settings
@@ -355,7 +356,7 @@ By default, LetsCrawl exports to CSV. You can also request JSON:
 
 ```bash
 # CSV export (default)
-python main.py --config news
+uv run main.py --config news
 
 # JSON export (requires code modification)
 # Edit main.py to use outputs.write_json() instead of write_csv()
@@ -380,9 +381,9 @@ Example cron job (runs every day at 9am):
 You can run multiple crawls sequentially:
 
 ```bash
-python main.py --config news
-python main.py --config rss --urls https://cnn.com
-python main.py --config etsy
+uv run main.py --config news
+uv run main.py --config rss --urls https://cnn.com
+uv run main.py --config etsy
 ```
 
 Each creates its own output files.
