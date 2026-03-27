@@ -28,11 +28,12 @@ from utils.scraper_utils import (
 load_dotenv()
 
 
-def parse_args() -> tuple[str, list[str] | None, bool, str]:
+def parse_args() -> tuple[str | None, list[str] | None, bool, str]:
     """Parse command line arguments.
 
     Returns:
         tuple: (config_name, urls, translate, target_language)
+        config_name is None if --list is used
     """
     # Get available configurations
     default_configs = ["dental", "minimal", "detailed"]
@@ -51,13 +52,13 @@ def parse_args() -> tuple[str, list[str] | None, bool, str]:
             help_text += f"  {config}: Custom configuration\n"
 
     parser = argparse.ArgumentParser(
-        description="Deep Seek Web Crawler",
+        description="LetsCrawl - Config-driven research scraping platform",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
         "--config",
         type=str,
-        required=True,
+        required=False,  # Made optional to support --list without config
         choices=list(CONFIGS.keys()),
         help=help_text,
     )
@@ -82,6 +83,7 @@ def parse_args() -> tuple[str, list[str] | None, bool, str]:
 
     args = parser.parse_args()
 
+    # Handle --list flag (works without --config)
     if args.list:
         logger.info("\nAvailable configurations:")
         logger.info("\nDefault templates:")
@@ -94,6 +96,10 @@ def parse_args() -> tuple[str, list[str] | None, bool, str]:
                 logger.info(f"  {config}: Custom configuration")
         sys.exit(0)
 
+    # Ensure --config is provided when not using --list
+    if not args.config:
+        parser.error("--config is required (except when using --list)")
+
     # mypy: args.config is guaranteed to be str when --list is not used
     return (
         str(args.config),
@@ -104,13 +110,30 @@ def parse_args() -> tuple[str, list[str] | None, bool, str]:
 
 
 def get_config(template: str) -> Dict[str, Any]:
-    """Get configuration based on template name."""
+    """Get configuration based on template name.
+
+    Validates the configuration fields against the ScrapedItem schema
+    before returning it.
+    """
     if template not in CONFIGS:
         logger.error(f"Error: Unknown configuration '{template}'")
         logger.info("\nTo see available configurations, run:")
         logger.info("python main.py --list")
         sys.exit(1)
-    return CONFIGS[template]
+
+    config = CONFIGS[template]
+
+    # Validate configuration fields match schema
+    try:
+        from config import validate_config_fields
+        validate_config_fields(template, config)
+        logger.info(f"✓ Configuration '{template}' validated successfully")
+    except ValueError as e:
+        logger.error(f"Configuration validation failed for '{template}':")
+        logger.error(str(e))
+        sys.exit(1)
+
+    return config
 
 
 async def crawl_items(

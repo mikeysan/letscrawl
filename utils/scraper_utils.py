@@ -84,7 +84,7 @@ def validate_llm_config(config: Dict[str, Any]) -> None:
 
     provider = config.get("PROVIDER", "groq/llama-3.3-70b-versatile")
     logger.info(f"LLM provider: {provider}")
-    logger.info(f"API key prefix: {api_key[:8]}...")
+    # Security: Do not log API key or prefix
 
 
 def get_llm_strategy(

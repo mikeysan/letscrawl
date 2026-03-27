@@ -287,3 +287,117 @@ Translation Guidelines:
 """
 
     return base_instruction + translation_augmentation
+
+
+def validate_config_fields(config_name: str, config: dict[str, Any]) -> bool:
+    """
+    Validate that configuration fields match the ScrapedItem model schema.
+
+    Args:
+        config_name: Name of the configuration being validated
+        config: Configuration dictionary to validate
+
+    Returns:
+        bool: True if valid
+
+    Raises:
+        ValueError: If configuration fields don't match ScrapedItem schema
+    """
+    from models.item import ScrapedItem
+
+    # Get valid field names from ScrapedItem model
+    valid_fields = set(ScrapedItem.model_fields.keys())
+
+    # Validate REQUIRED_KEYS
+    required_keys = config.get("REQUIRED_KEYS", [])
+    invalid_required = [key for key in required_keys if key not in valid_fields]
+
+    if invalid_required:
+        raise ValueError(
+            f"Configuration '{config_name}' has invalid REQUIRED_KEYS: "
+            f"{invalid_required}\n"
+            f"Valid fields are: {sorted(valid_fields)}"
+        )
+
+    # Validate OPTIONAL_KEYS
+    optional_keys = config.get("OPTIONAL_KEYS", [])
+    invalid_optional = [key for key in optional_keys if key not in valid_fields]
+
+    if invalid_optional:
+        raise ValueError(
+            f"Configuration '{config_name}' has invalid OPTIONAL_KEYS: "
+            f"{invalid_optional}\n"
+            f"Valid fields are: {sorted(valid_fields)}"
+        )
+
+    # Validate required config sections exist
+    required_sections = ["CRAWLER_CONFIG", "LLM_CONFIG"]
+    missing_sections = [section for section in required_sections if section not in config]
+
+    if missing_sections:
+        raise ValueError(
+            f"Configuration '{config_name}' is missing required sections: "
+            f"{missing_sections}"
+        )
+
+    # Validate CRAWLER_CONFIG has required fields
+    required_crawler_fields = ["MULTI_PAGE"]
+    crawler_config = config.get("CRAWLER_CONFIG", {})
+    missing_crawler_fields = [
+        field for field in required_crawler_fields if field not in crawler_config
+    ]
+
+    if missing_crawler_fields:
+        raise ValueError(
+            f"Configuration '{config_name}' CRAWLER_CONFIG is missing "
+            f"required fields: {missing_crawler_fields}"
+        )
+
+    # Validate LLM_CONFIG has required fields
+    required_llm_fields = ["PROVIDER", "INSTRUCTION"]
+    llm_config = config.get("LLM_CONFIG", {})
+    missing_llm_fields = [
+        field for field in required_llm_fields if field not in llm_config
+    ]
+
+    if missing_llm_fields:
+        raise ValueError(
+            f"Configuration '{config_name}' LLM_CONFIG is missing "
+            f"required fields: {missing_llm_fields}"
+        )
+
+    # Validate that either BASE_URL or SITES is present
+    has_base_url = "BASE_URL" in config
+    has_sites = "SITES" in config
+
+    if not has_base_url and not has_sites:
+        raise ValueError(
+            f"Configuration '{config_name}' must have either BASE_URL or SITES"
+        )
+
+    if has_sites:
+        # Validate SITES structure
+        sites = config["SITES"]
+        if not isinstance(sites, list) or len(sites) == 0:
+            raise ValueError(
+                f"Configuration '{config_name}' SITES must be a non-empty list"
+            )
+
+        for i, site in enumerate(sites):
+            if not isinstance(site, dict):
+                raise ValueError(
+                    f"Configuration '{config_name}' SITES[{i}] must be a dictionary"
+                )
+
+            required_site_fields = ["name", "BASE_URL", "CSS_SELECTOR"]
+            missing_site_fields = [
+                field for field in required_site_fields if field not in site
+            ]
+
+            if missing_site_fields:
+                raise ValueError(
+                    f"Configuration '{config_name}' SITES[{i}] is missing "
+                    f"required fields: {missing_site_fields}"
+                )
+
+    return True
