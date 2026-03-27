@@ -6,7 +6,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from crawler import WebCrawler
+from legacy.crawler import WebCrawler
 
 
 @pytest.mark.asyncio

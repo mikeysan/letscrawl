@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from fetcher import AsyncFetcher
-from security import RateLimiter, RobotsTxtChecker
+from legacy.fetcher import AsyncFetcher
+from legacy.security import RateLimiter, RobotsTxtChecker
 
 
 @pytest.mark.asyncio
@@ -224,7 +224,7 @@ class TestAsyncFetcherRetry:
     async def test_fetch_retries_configured_correctly(self):
         """Test that retry logic is configured with correct parameters."""
 
-        from fetcher import AsyncFetcher
+        from legacy.fetcher import AsyncFetcher
 
         # Get the retry wrapper
         fetcher = AsyncFetcher()

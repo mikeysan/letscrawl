@@ -8,18 +8,27 @@
 letscrawl/
 ├── main.py                 # CLI entry point, orchestration (338 lines)
 ├── config.py               # Configuration templates (290 lines)
-├── crawler.py              # Legacy custom crawler (142 lines)
-├── fetcher.py              # Legacy async fetcher (103 lines)
-├── security.py             # Legacy security utilities (82 lines)
-├── url_utils.py            # Legacy URL utilities (92 lines)
+├── legacy/                 # Archived legacy custom crawler
+│   ├── crawler.py          # Custom async crawler (archived)
+│   ├── fetcher.py          # Async fetcher (archived)
+│   ├── security.py         # Security utilities (archived)
+│   └── url_utils.py        # URL utilities (archived)
 ├── create_config.py        # Interactive config generator
 ├── my_configs.py           # User custom configs
 ├── models/
-│   └── item.py             # Generic ScrapedItem model (30 lines)
+│   ├── item.py             # Generic ScrapedItem model (legacy)
+│   ├── canonical.py        # Base ScrapedItem with metadata
+│   ├── news.py             # Article model
+│   ├── feed.py             # FeedDiscovery model
+│   └── source.py           # Source config models
+├── sources/                # Typed source configurations
+├── extraction/             # Crawl4AI isolation layer
+├── normalize/              # Field normalization
+├── outputs/                # Export (CSV, JSON)
 └── utils/
-    ├── scraper_utils.py    # Crawl4AI integration (377 lines)
-    ├── data_utils.py       # CSV export (66 lines)
-    └── logger.py           # Logging (55 lines)
+    ├── scraper_utils.py    # Crawl4AI integration
+    ├── data_utils.py       # CSV export (legacy)
+    └── logger.py           # Logging
 ```
 
 ## Target Architecture (Post-Refactor)

@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from security import RateLimiter, RobotsTxtChecker
+from legacy.security import RateLimiter, RobotsTxtChecker
 
 
 class TestRobotsTxtChecker:

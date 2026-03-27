@@ -2,7 +2,7 @@
 Tests for URL utilities.
 """
 
-from url_utils import is_safe_url, normalize_url
+from legacy.url_utils import is_safe_url, normalize_url
 
 
 class TestNormalizeUrl:
