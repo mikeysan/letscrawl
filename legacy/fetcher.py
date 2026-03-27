@@ -10,8 +10,8 @@ from tenacity import (
     wait_fixed,
 )
 
-from security import RateLimiter, RobotsTxtChecker
-from url_utils import is_safe_url
+from legacy.security import RateLimiter, RobotsTxtChecker
+from legacy.url_utils import is_safe_url
 
 
 class AsyncFetcher:

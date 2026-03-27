@@ -9,8 +9,8 @@ from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 
-from fetcher import AsyncFetcher
-from url_utils import normalize_url
+from legacy.fetcher import AsyncFetcher
+from legacy.url_utils import normalize_url
 from utils.logger import logger
 
 
