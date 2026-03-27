@@ -39,18 +39,34 @@ LetsCrawl is designed for **non-technical users** who need to:
 
 LetsCrawl requires Python 3.12 or later. If you don't have Python installed, you can download it from [python.org](https://www.python.org/downloads/).
 
-Once Python is installed, open your terminal (Command Prompt on Windows, Terminal on Mac/Linux) and run:
+**First, install `uv`** (a fast Python package manager):
 
 ```bash
-pip install letscrawl
+# On macOS and Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Or with pip (works everywhere)
+pip install uv
 ```
 
-Or install from the source code:
+**Then, install LetsCrawl from source:**
 
 ```bash
+# Clone the repository
 git clone https://github.com/yourusername/letscrawl.git
 cd letscrawl
-pip install -r requirements.txt
+
+# Install dependencies with uv (creates virtual environment automatically)
+uv sync
+
+# Activate the virtual environment
+# On macOS/Linux:
+source .venv/bin/activate
+# On Windows:
+.venv\Scripts\activate
 ```
 
 ### 2. Set Up Your API Key
@@ -326,8 +342,8 @@ python main.py --config my_custom_news
 ### "Module not found"
 
 - **Problem**: Python can't find a library
-- **Solution**: Make sure you installed dependencies: `pip install -r requirements.txt`
-- **Solution**: Try using a virtual environment
+- **Solution**: Make sure you ran `uv sync` to install dependencies
+- **Solution**: Make sure you activated the virtual environment: `source .venv/bin/activate` (Mac/Linux) or `.venv\Scripts\activate` (Windows)
 
 ---
 
@@ -427,7 +443,7 @@ A typical crawl might take 1-5 minutes per website.
 If you encounter bugs or issues:
 
 1. Check the [Troubleshooting](#troubleshooting) section above
-2. Make sure you have the latest version: `pip install --upgrade letscrawl`
+2. Make sure you have the latest version: `git pull` followed by `uv sync`
 3. Search existing issues at [github.com/yourusername/letscrawl/issues](https://github.com/yourusername/letscrawl/issues)
 4. Create a new issue with:
    - What you were trying to do
