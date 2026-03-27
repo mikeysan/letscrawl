@@ -119,3 +119,9 @@ plans/
 
 # Pre-commit
 .pre-commit-cache/
+
+# Markdown files (except main README)
+*.md
+*.MD
+!README.md
+!doc/
