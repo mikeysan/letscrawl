@@ -62,12 +62,6 @@ cd letscrawl
 
 # Install dependencies with uv (creates virtual environment automatically)
 uv sync
-
-# Activate the virtual environment
-# On macOS/Linux:
-source .venv/bin/activate
-# On Windows:
-.venv\Scripts\activate
 ```
 
 ### 2. Set Up Your API Key
