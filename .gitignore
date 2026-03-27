@@ -124,4 +124,3 @@ plans/
 *.md
 *.MD
 !README.md
-!doc/
