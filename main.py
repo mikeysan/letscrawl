@@ -119,19 +119,22 @@ def get_config(template: str) -> Dict[str, Any]:
         logger.error(f"Error: Unknown configuration '{template}'")
         logger.info("\nTo see available configurations, run:")
         logger.info("python main.py --list")
-        sys.exit(1)
+        raise ValueError(f"Unknown configuration '{template}'")
 
     config = CONFIGS[template]
 
     # Validate configuration fields match schema
     try:
         from config import validate_config_fields
+
         validate_config_fields(template, config)
         logger.info(f"✓ Configuration '{template}' validated successfully")
     except ValueError as e:
         logger.error(f"Configuration validation failed for '{template}':")
         logger.error(str(e))
-        sys.exit(1)
+        raise ValueError(
+            f"Configuration validation failed for '{template}': {e}"
+        ) from e
 
     return config
 
@@ -339,7 +342,7 @@ async def main() -> None:
         validate_llm_config(config["LLM_CONFIG"])
     except ValueError as e:
         logger.error(f"Configuration error: {e}")
-        sys.exit(1)
+        raise ValueError(f"Configuration error: {e}") from e
 
     try:
         await crawl_items(
@@ -357,4 +360,11 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except ValueError as e:
+        logger.error(str(e))
+        sys.exit(1)
+    except KeyboardInterrupt:
+        logger.warning("Interrupted.")
+        sys.exit(130)
