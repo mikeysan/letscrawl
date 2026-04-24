@@ -1,6 +1,6 @@
 import json
 import os
-import xml.etree.ElementTree as ET
+from lxml import etree
 from typing import Any, Dict
 
 import requests
@@ -35,11 +35,12 @@ def validate_rss_feed(url: str) -> bool:
             logger.info(f"RSS feed returned status {response.status_code}: {url}")
             return False
 
-        # Try to parse as XML
-        ET.fromstring(response.content)
+        # Parse as XML with resolve_entities='internal' to block local file access
+        parser = etree.XMLParser(resolve_entities='internal')
+        etree.fromstring(response.content, parser=parser)
         logger.info(f"RSS feed validated successfully: {url}")
         return True
-    except ET.ParseError as e:
+    except etree.ParseError as e:
         logger.info(f"RSS feed XML parsing failed: {url} - {e}")
         return False
     except Exception as e:
